@@ -9,6 +9,12 @@ from backend.weather_client import WeatherClient, WeatherServiceError
 app = FastAPI(title="Weather App API", version="0.1.0")
 
 
+def main() -> int:
+    """Run backend scaffold entrypoint."""
+    print("Backend scaffold is running.")
+    return 0
+
+
 def get_weather_client() -> WeatherClient:
     return WeatherClient(api_key=os.getenv("WEATHER_API_KEY", ""))
 
@@ -38,3 +44,7 @@ async def weather(
         "data": weather_data,
         "source": "openweathermap",
     }
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
