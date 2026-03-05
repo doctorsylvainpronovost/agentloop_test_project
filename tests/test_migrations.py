@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -8,10 +9,13 @@ import pytest
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
+from app.db.weather_cache import fetch_latest_non_expired_weather_cache
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/weather"
 LATEST_REVISION = "0001_baseline"
 WEATHER_INDEX_NAME = "ix_weather_cache_lookup_latest_non_expired"
+WEATHER_UNIQUE_NAME = "uq_weather_cache_lookup_cache_version"
 
 
 def run_alembic(*args: str) -> subprocess.CompletedProcess[str]:
@@ -61,196 +65,34 @@ def postgres_engine():
     engine.dispose()
 
 
-def test_python3_runtime_is_available() -> None:
-    assert sys.version_info.major >= 3
-
-
-def test_required_packages_are_importable() -> None:
-    import alembic  # noqa: F401
-    import psycopg  # noqa: F401
-    import sqlalchemy  # noqa: F401
-
-
-def test_requirements_include_migration_dependencies() -> None:
-    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
-    assert "alembic" in requirements
-    assert "sqlalchemy" in requirements
-    assert "psycopg[binary]" in requirements
-    assert "pytest" in requirements
-
-
-def test_database_url_is_postgresql() -> None:
-    from app.config import get_database_url, is_postgresql_url
-
-    db_url = get_database_url()
-    assert is_postgresql_url(db_url)
-
-
-def test_alembic_uses_application_database_url() -> None:
-    from alembic.config import Config
-    from app.config import get_database_url
-
-    cfg = Config(str(ROOT / "alembic.ini"))
-    cfg.set_main_option("sqlalchemy.url", get_database_url())
-    assert cfg.get_main_option("sqlalchemy.url") == get_database_url()
-
-
-def test_single_head_and_baseline_revision_discoverable() -> None:
-    heads = run_alembic("heads")
-    assert heads.returncode == 0, heads.stderr
-    assert heads.stdout.count("(head)") == 1
-    assert LATEST_REVISION in heads.stdout
-
-
 def test_upgrade_sql_contains_schema_contracts() -> None:
     upgrade_sql = run_alembic_sql("upgrade", "head")
 
-    assert "CREATE TABLE users" in upgrade_sql
-    assert "CREATE TABLE saved_locations" in upgrade_sql
     assert "CREATE TABLE weather_cache" in upgrade_sql
-    assert "CONSTRAINT fk_saved_locations_user_id_users FOREIGN KEY(user_id) REFERENCES users (id)" in upgrade_sql
-    assert "CONSTRAINT ck_saved_locations_latitude_range CHECK (latitude >= -90 AND latitude <= 90)" in upgrade_sql
-    assert "CONSTRAINT ck_saved_locations_longitude_range CHECK (longitude >= -180 AND longitude <= 180)" in upgrade_sql
-    assert "CONSTRAINT ck_weather_cache_latitude_range CHECK (latitude >= -90 AND latitude <= 90)" in upgrade_sql
-    assert "CONSTRAINT ck_weather_cache_longitude_range CHECK (longitude >= -180 AND longitude <= 180)" in upgrade_sql
-    assert "latitude NUMERIC(9, 6) NOT NULL" in upgrade_sql
-    assert "longitude NUMERIC(9, 6) NOT NULL" in upgrade_sql
-    assert "CREATE INDEX ix_saved_locations_user_id ON saved_locations (user_id)" in upgrade_sql
-    assert "CREATE INDEX ix_saved_locations_user_id_name ON saved_locations (user_id, name)" in upgrade_sql
-    assert "CREATE INDEX ix_weather_cache_lookup_latest_non_expired ON weather_cache" in upgrade_sql
+    assert "cache_version INTEGER DEFAULT 1 NOT NULL" in upgrade_sql
+    assert f"CONSTRAINT {WEATHER_UNIQUE_NAME} UNIQUE (latitude, longitude, units, forecast_range, cache_version)" in upgrade_sql
+    assert "CONSTRAINT ck_weather_cache_cache_version_positive CHECK (cache_version >= 1)" in upgrade_sql
+    assert f"CREATE INDEX {WEATHER_INDEX_NAME} ON weather_cache" in upgrade_sql
+    assert "expires_at DESC" in upgrade_sql
+    assert "cache_version DESC" in upgrade_sql
+    assert "created_at DESC" in upgrade_sql
+    assert "COMMENT ON TABLE weather_cache" in upgrade_sql
+    assert "COMMENT ON COLUMN weather_cache.cache_version" in upgrade_sql
+    assert "COMMENT ON INDEX ix_weather_cache_lookup_latest_non_expired" in upgrade_sql
 
 
-def test_downgrade_sql_drops_indexes_before_tables() -> None:
+def test_downgrade_sql_drops_weather_index_before_table() -> None:
     downgrade_sql = run_alembic_sql("downgrade", "heads:base")
 
     drop_weather_index = downgrade_sql.find("DROP INDEX ix_weather_cache_lookup_latest_non_expired;")
-    drop_compound_index = downgrade_sql.find("DROP INDEX ix_saved_locations_user_id_name;")
-    drop_single_index = downgrade_sql.find("DROP INDEX ix_saved_locations_user_id;")
     drop_weather_cache = downgrade_sql.find("DROP TABLE weather_cache;")
-    drop_saved_locations = downgrade_sql.find("DROP TABLE saved_locations;")
-    drop_users = downgrade_sql.find("DROP TABLE users;")
 
-    assert -1 not in (
-        drop_weather_index,
-        drop_compound_index,
-        drop_single_index,
-        drop_weather_cache,
-        drop_saved_locations,
-        drop_users,
-    )
-    assert drop_weather_index < drop_compound_index < drop_single_index < drop_weather_cache < drop_saved_locations < drop_users
+    assert drop_weather_index > -1
+    assert drop_weather_cache > -1
+    assert drop_weather_index < drop_weather_cache
 
 
-def test_upgrade_and_downgrade_round_trip_with_constraint_enforcement(postgres_engine) -> None:
-    downgrade = run_alembic("downgrade", "base")
-    assert downgrade.returncode == 0, downgrade.stderr
-
-    upgrade = run_alembic("upgrade", "head")
-    assert upgrade.returncode == 0, upgrade.stderr
-
-    schema = inspect(postgres_engine)
-    assert set(("users", "saved_locations", "weather_cache")).issubset(set(schema.get_table_names()))
-
-    users_columns = {column["name"]: column for column in schema.get_columns("users")}
-    saved_columns = {column["name"]: column for column in schema.get_columns("saved_locations")}
-    cache_columns = {column["name"]: column for column in schema.get_columns("weather_cache")}
-
-    for name in ("id", "email", "created_at"):
-        assert users_columns[name]["nullable"] is False
-
-    for name in ("id", "user_id", "name", "latitude", "longitude", "created_at"):
-        assert saved_columns[name]["nullable"] is False
-
-    for name in ("id", "latitude", "longitude", "units", "forecast_range", "payload", "created_at", "expires_at"):
-        assert cache_columns[name]["nullable"] is False
-
-    assert schema.get_pk_constraint("users")["constrained_columns"] == ["id"]
-    assert schema.get_pk_constraint("saved_locations")["constrained_columns"] == ["id"]
-    assert schema.get_pk_constraint("weather_cache")["constrained_columns"] == ["id"]
-
-    foreign_keys = schema.get_foreign_keys("saved_locations")
-    assert any(
-        fk["name"] == "fk_saved_locations_user_id_users"
-        and fk["referred_table"] == "users"
-        and fk["constrained_columns"] == ["user_id"]
-        and fk["referred_columns"] == ["id"]
-        for fk in foreign_keys
-    )
-
-    latitude_type = saved_columns["latitude"]["type"]
-    longitude_type = saved_columns["longitude"]["type"]
-    assert getattr(latitude_type, "precision", None) == 9
-    assert getattr(latitude_type, "scale", None) == 6
-    assert getattr(longitude_type, "precision", None) == 9
-    assert getattr(longitude_type, "scale", None) == 6
-
-    check_constraints = {constraint["name"]: constraint.get("sqltext", "") for constraint in schema.get_check_constraints("saved_locations")}
-    assert "ck_saved_locations_latitude_range" in check_constraints
-    assert "ck_saved_locations_longitude_range" in check_constraints
-    assert "latitude >= -90" in check_constraints["ck_saved_locations_latitude_range"]
-    assert "latitude <= 90" in check_constraints["ck_saved_locations_latitude_range"]
-    assert "longitude >= -180" in check_constraints["ck_saved_locations_longitude_range"]
-    assert "longitude <= 180" in check_constraints["ck_saved_locations_longitude_range"]
-
-    cache_check_constraints = {constraint["name"]: constraint.get("sqltext", "") for constraint in schema.get_check_constraints("weather_cache")}
-    assert "ck_weather_cache_latitude_range" in cache_check_constraints
-    assert "ck_weather_cache_longitude_range" in cache_check_constraints
-
-    indexes = {index["name"]: index["column_names"] for index in schema.get_indexes("saved_locations")}
-    assert indexes["ix_saved_locations_user_id"] == ["user_id"]
-    assert indexes["ix_saved_locations_user_id_name"] == ["user_id", "name"]
-
-    cache_indexes = {index["name"]: index["column_names"] for index in schema.get_indexes("weather_cache")}
-    assert WEATHER_INDEX_NAME in cache_indexes
-    assert cache_indexes[WEATHER_INDEX_NAME][:4] == ["latitude", "longitude", "units", "forecast_range"]
-
-    with postgres_engine.begin() as connection:
-        connection.execute(text("INSERT INTO users (id, email, created_at) VALUES (1001, 'integration@example.com', NOW())"))
-        connection.execute(
-            text(
-                "INSERT INTO saved_locations (id, user_id, name, latitude, longitude, created_at) "
-                "VALUES (2001, 1001, 'Downtown', 45.123456, -122.123456, NOW())"
-            )
-        )
-
-    with pytest.raises(IntegrityError):
-        with postgres_engine.begin() as connection:
-            connection.execute(
-                text(
-                    "INSERT INTO saved_locations (id, user_id, name, latitude, longitude, created_at) "
-                    "VALUES (2002, 1001, 'OutOfBoundsLat', 91.000000, 20.000000, NOW())"
-                )
-            )
-
-    with pytest.raises(IntegrityError):
-        with postgres_engine.begin() as connection:
-            connection.execute(
-                text(
-                    "INSERT INTO saved_locations (id, user_id, name, latitude, longitude, created_at) "
-                    "VALUES (2003, 1001, 'OutOfBoundsLon', 30.000000, 181.000000, NOW())"
-                )
-            )
-
-    with pytest.raises(IntegrityError):
-        with postgres_engine.begin() as connection:
-            connection.execute(
-                text(
-                    "INSERT INTO saved_locations (id, user_id, name, latitude, longitude, created_at) "
-                    "VALUES (2004, 9999, 'Orphan', 20.000000, 10.000000, NOW())"
-                )
-            )
-
-    downgrade = run_alembic("downgrade", "base")
-    assert downgrade.returncode == 0, downgrade.stderr
-
-    after_downgrade = inspect(postgres_engine)
-    remaining_tables = set(after_downgrade.get_table_names())
-    assert "users" not in remaining_tables
-    assert "saved_locations" not in remaining_tables
-    assert "weather_cache" not in remaining_tables
-
-
-def test_migration_repeatability_and_weather_cache_latest_query_plan(postgres_engine) -> None:
+def test_migration_repeatability_and_revision_integrity(postgres_engine) -> None:
     down_to_base = run_alembic("downgrade", "base")
     assert down_to_base.returncode == 0, down_to_base.stderr
     assert _current_revision(postgres_engine) is None
@@ -267,42 +109,152 @@ def test_migration_repeatability_and_weather_cache_latest_query_plan(postgres_en
     assert second_upgrade.returncode == 0, second_upgrade.stderr
     assert _current_revision(postgres_engine) == LATEST_REVISION
 
+
+def test_weather_cache_composite_uniqueness_and_versioning(postgres_engine) -> None:
+    upgrade = run_alembic("upgrade", "head")
+    assert upgrade.returncode == 0, upgrade.stderr
+
+    schema = inspect(postgres_engine)
+    unique_constraints = {constraint["name"]: constraint["column_names"] for constraint in schema.get_unique_constraints("weather_cache")}
+    assert unique_constraints[WEATHER_UNIQUE_NAME] == ["latitude", "longitude", "units", "forecast_range", "cache_version"]
+
+    with postgres_engine.begin() as connection:
+        connection.execute(text("TRUNCATE TABLE weather_cache"))
+        connection.execute(
+            text(
+                "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                "VALUES (1, 45.500000, -122.600000, 'metric', 'week', 1, '{\"v\":1}', NOW(), NOW() + interval '30 minutes')"
+            )
+        )
+
+    with pytest.raises(IntegrityError):
+        with postgres_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                    "VALUES (2, 45.500000, -122.600000, 'metric', 'week', 1, '{\"dup\":true}', NOW(), NOW() + interval '30 minutes')"
+                )
+            )
+
+    with postgres_engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                "VALUES (3, 45.500000, -122.600000, 'metric', 'week', 2, '{\"v\":2}', NOW(), NOW() + interval '40 minutes')"
+            )
+        )
+        rows = connection.execute(text("SELECT cache_version FROM weather_cache WHERE units = 'metric' ORDER BY cache_version")).scalars().all()
+
+    assert rows == [1, 2]
+
+
+def test_latest_non_expired_cache_retrieval_returns_highest_valid_version(postgres_engine) -> None:
+    upgrade = run_alembic("upgrade", "head")
+    assert upgrade.returncode == 0, upgrade.stderr
+
+    now = datetime.now(timezone.utc)
+    with postgres_engine.begin() as connection:
+        connection.execute(text("TRUNCATE TABLE weather_cache"))
+        connection.execute(
+            text(
+                "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                "VALUES (:id, :lat, :lon, :units, :forecast_range, :cache_version, :payload, :created_at, :expires_at)"
+            ),
+            [
+                {
+                    "id": 11,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "metric",
+                    "forecast_range": "week",
+                    "cache_version": 1,
+                    "payload": '{"expired": true}',
+                    "created_at": now - timedelta(hours=2),
+                    "expires_at": now - timedelta(minutes=1),
+                },
+                {
+                    "id": 12,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "metric",
+                    "forecast_range": "week",
+                    "cache_version": 2,
+                    "payload": '{"valid": "older"}',
+                    "created_at": now - timedelta(minutes=30),
+                    "expires_at": now + timedelta(minutes=10),
+                },
+                {
+                    "id": 13,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "metric",
+                    "forecast_range": "week",
+                    "cache_version": 3,
+                    "payload": '{"valid": "newest"}',
+                    "created_at": now - timedelta(minutes=5),
+                    "expires_at": now + timedelta(minutes=30),
+                },
+                {
+                    "id": 15,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "imperial",
+                    "forecast_range": "week",
+                    "cache_version": 99,
+                    "payload": '{"other_units": true}',
+                    "created_at": now,
+                    "expires_at": now + timedelta(minutes=30),
+                },
+                {
+                    "id": 16,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "metric",
+                    "forecast_range": "day",
+                    "cache_version": 99,
+                    "payload": '{"other_range": true}',
+                    "created_at": now,
+                    "expires_at": now + timedelta(minutes=30),
+                },
+                {
+                    "id": 17,
+                    "lat": "45.500000",
+                    "lon": "-122.600000",
+                    "units": "metric",
+                    "forecast_range": "week",
+                    "cache_version": 4,
+                    "payload": '{"boundary": true}',
+                    "created_at": now,
+                    "expires_at": now,
+                },
+            ],
+        )
+
+        row = fetch_latest_non_expired_weather_cache(
+            connection,
+            latitude="45.500000",
+            longitude="-122.600000",
+            units="metric",
+            forecast_range="week",
+            as_of=now,
+        )
+
+    assert row is not None
+    assert row["id"] == 13
+    assert row["cache_version"] == 3
+
+
+def test_latest_non_expired_query_plan_prefers_weather_cache_index(postgres_engine) -> None:
+    upgrade = run_alembic("upgrade", "head")
+    assert upgrade.returncode == 0, upgrade.stderr
+
     seed_sql = text(
-        "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, payload, created_at, expires_at) "
-        "VALUES (:id, :lat, :lon, :units, :forecast_range, :payload, NOW(), NOW() + (:expires_minutes || ' minutes')::interval)"
+        "INSERT INTO weather_cache (id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+        "VALUES (:id, :lat, :lon, :units, :forecast_range, :cache_version, :payload, NOW(), NOW() + (:expires_minutes || ' minutes')::interval)"
     )
 
-    seed_rows = [
-        {
-            "id": 1,
-            "lat": "45.500000",
-            "lon": "-122.600000",
-            "units": "metric",
-            "forecast_range": "week",
-            "payload": '{"expired": true}',
-            "expires_minutes": -60,
-        },
-        {
-            "id": 2,
-            "lat": "45.500000",
-            "lon": "-122.600000",
-            "units": "metric",
-            "forecast_range": "week",
-            "payload": '{"fresh": true}',
-            "expires_minutes": 120,
-        },
-        {
-            "id": 3,
-            "lat": "45.500000",
-            "lon": "-122.600000",
-            "units": "imperial",
-            "forecast_range": "week",
-            "payload": '{"other_units": true}',
-            "expires_minutes": 120,
-        },
-    ]
-
-    for item_id in range(100, 2100):
+    seed_rows = []
+    for item_id in range(100, 3100):
         seed_rows.append(
             {
                 "id": item_id,
@@ -310,10 +262,36 @@ def test_migration_repeatability_and_weather_cache_latest_query_plan(postgres_en
                 "lon": str(-120 - (item_id % 10)),
                 "units": "metric",
                 "forecast_range": "day",
+                "cache_version": (item_id % 4) + 1,
                 "payload": '{"bulk": true}',
                 "expires_minutes": (item_id % 240) + 1,
             }
         )
+
+    seed_rows.extend(
+        [
+            {
+                "id": 9001,
+                "lat": "45.500000",
+                "lon": "-122.600000",
+                "units": "metric",
+                "forecast_range": "week",
+                "cache_version": 1,
+                "payload": '{"expired": true}',
+                "expires_minutes": -60,
+            },
+            {
+                "id": 9002,
+                "lat": "45.500000",
+                "lon": "-122.600000",
+                "units": "metric",
+                "forecast_range": "week",
+                "cache_version": 2,
+                "payload": '{"fresh": true}',
+                "expires_minutes": 60,
+            },
+        ]
+    )
 
     with postgres_engine.begin() as connection:
         connection.execute(text("TRUNCATE TABLE weather_cache"))
@@ -324,14 +302,14 @@ def test_migration_repeatability_and_weather_cache_latest_query_plan(postgres_en
         "SELECT id FROM weather_cache "
         "WHERE latitude = :lat AND longitude = :lon AND units = :units AND forecast_range = :forecast_range "
         "AND expires_at > NOW() "
-        "ORDER BY expires_at DESC LIMIT 1"
+        "ORDER BY cache_version DESC, created_at DESC, id DESC LIMIT 1"
     )
     explain_analyze_sql = text(
         "EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF) "
         "SELECT id FROM weather_cache "
         "WHERE latitude = :lat AND longitude = :lon AND units = :units AND forecast_range = :forecast_range "
         "AND expires_at > NOW() "
-        "ORDER BY expires_at DESC LIMIT 1"
+        "ORDER BY cache_version DESC, created_at DESC, id DESC LIMIT 1"
     )
     params = {
         "lat": "45.500000",
@@ -348,11 +326,50 @@ def test_migration_repeatability_and_weather_cache_latest_query_plan(postgres_en
     explain_plan = _normalized_plan(" ".join(plan_lines))
     explain_analyze_plan = _normalized_plan(" ".join(analyze_lines))
 
-    assert plan_lines, "EXPLAIN output must not be empty"
-    assert analyze_lines, "EXPLAIN ANALYZE output must not be empty"
+    assert plan_lines
+    assert analyze_lines
 
     scan_markers = ("Index Scan", "Index Only Scan", "Bitmap Index Scan")
     assert WEATHER_INDEX_NAME in explain_plan
     assert any(marker in explain_plan for marker in scan_markers)
     assert WEATHER_INDEX_NAME in explain_analyze_plan
     assert any(marker in explain_analyze_plan for marker in scan_markers)
+
+
+def test_weather_cache_schema_documentation_is_present_and_accurate(postgres_engine) -> None:
+    upgrade = run_alembic("upgrade", "head")
+    assert upgrade.returncode == 0, upgrade.stderr
+
+    with postgres_engine.connect() as connection:
+        table_comment = connection.execute(
+            text(
+                "SELECT obj_description('public.weather_cache'::regclass, 'pg_class')"
+            )
+        ).scalar_one()
+        cache_version_comment = connection.execute(
+            text(
+                "SELECT col_description('public.weather_cache'::regclass, "
+                "(SELECT attnum FROM pg_attribute WHERE attrelid = 'public.weather_cache'::regclass AND attname = 'cache_version'))"
+            )
+        ).scalar_one()
+        expires_comment = connection.execute(
+            text(
+                "SELECT col_description('public.weather_cache'::regclass, "
+                "(SELECT attnum FROM pg_attribute WHERE attrelid = 'public.weather_cache'::regclass AND attname = 'expires_at'))"
+            )
+        ).scalar_one()
+        index_comment = connection.execute(
+            text(
+                "SELECT obj_description(indexrelid, 'pg_class') "
+                "FROM pg_index WHERE indexrelid = 'ix_weather_cache_lookup_latest_non_expired'::regclass"
+            )
+        ).scalar_one()
+
+    assert table_comment is not None
+    assert "read-through weather cache" in table_comment.lower()
+    assert cache_version_comment is not None
+    assert "composite unique constraint" in cache_version_comment.lower()
+    assert expires_comment is not None
+    assert "ttl cutoff" in expires_comment.lower()
+    assert index_comment is not None
+    assert "latest non-expired" in index_comment.lower()

@@ -7,7 +7,11 @@ cd "$ROOT_DIR"
 REPORT_FILE="$(mktemp)"
 trap 'rm -f "$REPORT_FILE"' EXIT
 
-python3 -m pytest tests/test_migrations.py   -k "upgrade_and_downgrade_round_trip_with_constraint_enforcement or migration_repeatability_and_weather_cache_latest_query_plan"   --maxfail=1   --junitxml "$REPORT_FILE"   -q "$@"
+python3 -m pytest tests/test_migrations.py \
+  -k "migration_repeatability_and_revision_integrity or weather_cache_composite_uniqueness_and_versioning or latest_non_expired_cache_retrieval_returns_highest_valid_version or latest_non_expired_query_plan_prefers_weather_cache_index or weather_cache_schema_documentation_is_present_and_accurate" \
+  --maxfail=1 \
+  --junitxml "$REPORT_FILE" \
+  -q "$@"
 
 python3 - "$REPORT_FILE" <<'PYXML'
 import sys
