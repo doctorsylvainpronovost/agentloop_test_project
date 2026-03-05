@@ -1,10 +1,10 @@
 import subprocess
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 
-class BackendMainTest(unittest.TestCase):
+class TestBackendMainScript(unittest.TestCase):
     def test_backend_main_runs_successfully(self) -> None:
         script_path = Path(__file__).resolve().parents[1] / "backend" / "main.py"
         result = subprocess.run(
@@ -16,6 +16,7 @@ class BackendMainTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertIn("Backend scaffold is running.", result.stdout)
+        self.assertEqual(result.stderr, "")
 
 
 if __name__ == "__main__":
