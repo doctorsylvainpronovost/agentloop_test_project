@@ -7,4 +7,5 @@ if (!appRoot) {
   throw new Error("App root not found");
 }
 
+appRoot.dataset.boot = "true";
 appRoot.innerHTML = renderApp();
