@@ -26,3 +26,17 @@ def test_entry_script_runs_successfully() -> None:
     assert completed.returncode == 0
     assert completed.stdout == f"{MESSAGE}\n"
     assert completed.stderr == ""
+
+
+def test_entry_script_is_directly_executable() -> None:
+    script_path = Path(__file__).resolve().parent / "backend" / "main.py"
+    completed = subprocess.run(
+        [str(script_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0
+    assert completed.stdout == f"{MESSAGE}\n"
+    assert completed.stderr == ""
