@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -71,3 +72,40 @@ def test_migration_commands_history_and_upgrade_sql() -> None:
 
     repeat_upgrade_sql = run_alembic("upgrade", "head", "--sql")
     assert repeat_upgrade_sql.returncode == 0, repeat_upgrade_sql.stderr
+
+
+def test_weather_cache_upgrade_sql_contains_constraints_indexes_and_comments() -> None:
+    upgrade_sql = run_alembic("upgrade", "head", "--sql")
+    assert upgrade_sql.returncode == 0, upgrade_sql.stderr
+
+    sql = upgrade_sql.stdout
+
+    assert "CREATE TABLE weather_cache" in sql
+    assert "payload JSONB NOT NULL" in sql
+    assert "expires_at TIMESTAMP WITH TIME ZONE NOT NULL" in sql
+    assert "created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL" in sql
+    assert "updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL" in sql
+
+    assert "CONSTRAINT ck_weather_cache_units_valid CHECK (units IN ('metric', 'imperial'))" in sql
+    assert "CONSTRAINT ck_weather_cache_range_valid CHECK (range IN ('1d', '3d', '7d'))" in sql
+    assert "CONSTRAINT uq_weather_cache_key_version UNIQUE (lat, lon, units, range, created_at)" in sql
+
+    index_pattern = re.compile(
+        r"CREATE INDEX ix_weather_cache_lookup_latest\s+ON weather_cache "
+        r"\(lat, lon, units, range, created_at DESC, expires_at DESC\)",
+        re.IGNORECASE | re.MULTILINE,
+    )
+    assert index_pattern.search(sql), sql
+
+    assert "COMMENT ON TABLE weather_cache IS" in sql
+    assert "COMMENT ON CONSTRAINT uq_weather_cache_key_version ON weather_cache IS" in sql
+    assert "COMMENT ON INDEX ix_weather_cache_lookup_latest IS" in sql
+
+
+def test_weather_cache_downgrade_sql_removes_index_and_table() -> None:
+    downgrade_sql = run_alembic("downgrade", "0001_baseline:base", "--sql")
+    assert downgrade_sql.returncode == 0, downgrade_sql.stderr
+
+    sql = downgrade_sql.stdout
+    assert "DROP INDEX IF EXISTS ix_weather_cache_lookup_latest" in sql
+    assert "DROP TABLE weather_cache" in sql
