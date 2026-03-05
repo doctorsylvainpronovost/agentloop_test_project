@@ -36,6 +36,17 @@ test("resolveApiBaseUrl prioritizes explicit config over environment", () => {
   assert.equal(endpoint, "https://override.example.com");
 });
 
+
+test("resolveApiBaseUrl prioritizes VITE_API_BASE_URL over compatibility env vars", () => {
+  const endpoint = resolveApiBaseUrl(undefined, {
+    VITE_API_BASE_URL: "https://api.example.com/",
+    VITE_BACKEND_URL: "https://legacy.example.com/",
+    VITE_BACKEND_BASE_URL: "https://fallback.example.com/",
+  });
+
+  assert.equal(endpoint, "https://api.example.com");
+});
+
 test("buildForecastRequest includes backend base URL, location, and selected range", () => {
   const endpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
 
