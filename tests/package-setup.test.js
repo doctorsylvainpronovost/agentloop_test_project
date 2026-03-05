@@ -33,7 +33,7 @@ test("devDependencies stay minimal for requested frontend setup", async () => {
 test("package.json includes test script recognized by QA", async () => {
   const pkg = await loadPackageJson();
 
-  assert.equal(pkg.scripts.test, "node --test tests/package-setup.test.js");
+  assert.equal(pkg.scripts.test, "node --test");
 });
 
 test("package.json content is valid JSON", async () => {
