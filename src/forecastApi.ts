@@ -6,6 +6,10 @@ export type ForecastRequest = {
   coordinates?: { lat: number; lon: number };
 };
 
+type RequestOptions = {
+  apiBaseUrl?: string;
+};
+
 export type WeatherPayload = {
   city: string;
   temperature: number;
@@ -39,7 +43,36 @@ export const rangeLabels: Record<ForecastRange, string> = {
   week: "Full Week",
 };
 
-export const buildForecastRequest = ({ location, range, coordinates }: ForecastRequest): string => {
+const DEFAULT_API_BASE_URL = "http://localhost:8000";
+
+const readFrontendEnv = (): { VITE_API_BASE_URL?: string } => {
+  const importMeta = import.meta as ImportMeta & {
+    env?: {
+      VITE_API_BASE_URL?: string;
+    };
+  };
+
+  return importMeta.env ?? {};
+};
+
+export const resolveApiBaseUrl = (configuredBaseUrl = readFrontendEnv().VITE_API_BASE_URL): string => {
+  const normalized = configuredBaseUrl?.trim() ?? "";
+  const value = normalized || DEFAULT_API_BASE_URL;
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(value);
+  } catch {
+    throw new Error("VITE_API_BASE_URL must be an absolute URL (for example: http://localhost:8000).");
+  }
+
+  return parsedUrl.toString().replace(/\/$/, "");
+};
+
+export const buildForecastRequest = (
+  { location, range, coordinates }: ForecastRequest,
+  options: RequestOptions = {},
+): string => {
   const normalizedLocation = location.trim();
 
   if (!normalizedLocation) {
@@ -53,7 +86,9 @@ export const buildForecastRequest = ({ location, range, coordinates }: ForecastR
     params.set("lon", String(coordinates.lon));
   }
 
-  return `/api/weather?${params.toString()}`;
+  const baseUrl = resolveApiBaseUrl(options.apiBaseUrl);
+
+  return `${baseUrl}/api/weather?${params.toString()}`;
 };
 
 const describeGeolocationError = (error: GeolocationPositionError): string => {
@@ -75,8 +110,9 @@ const describeGeolocationError = (error: GeolocationPositionError): string => {
 export const fetchForecast = async (
   request: ForecastRequest,
   fetchImpl: typeof fetch = fetch,
+  options: RequestOptions = {},
 ): Promise<ForecastResponse> => {
-  const endpoint = buildForecastRequest(request);
+  const endpoint = buildForecastRequest(request, options);
   const response = await fetchImpl(endpoint);
 
   if (!response.ok) {
