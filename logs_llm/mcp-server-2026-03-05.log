@@ -5915,3 +5915,1784 @@
   "lastActivity": 1772715402804,
   "queue": 0
 }
+[2026-03-05T14:02:50.188Z] [INFO] [SYSTEM] MCP Server Transport Connecting DATA: {
+  "transport": "stdio"
+}
+[2026-03-05T14:02:50.189Z] [INFO] [SYSTEM] MCP Server Ready DATA: {
+  "directory": "/Users/sly/GitHub/agentloop_test_project",
+  "transport": "stdio",
+  "toolsCount": 26,
+  "readyTime": 1772719370189
+}
+[2026-03-05T14:02:50.198Z] [INFO] [MCP_REQUEST] [req_1772719370198_2oomgsakv] Incoming MCP request: index DATA: {
+  "method": "index",
+  "params": {
+    "directory": "/Users/sly/GitHub/agentloop_test_project/.worktrees/task-64"
+  }
+}
+[2026-03-05T14:02:50.202Z] [INFO] [SYSTEM] MCP Server Starting DATA: {
+  "directory": "/Users/sly/GitHub/agentloop_test_project",
+  "nodeVersion": "v24.3.0",
+  "platform": "darwin",
+  "pid": 22712,
+  "configEnvironment": "development",
+  "embeddingEnabled": false
+}
+[2026-03-05T14:02:50.202Z] [INFO] [SYSTEM] Resource Manager Started DATA: {
+  "maxMemoryMB": 4096,
+  "maxCpuPercent": 80,
+  "embeddingFallback": true
+}
+[2026-03-05T14:02:50.224Z] [INFO] [INDEXING] [req_1772719370198_2oomgsakv] Detected 9 source files in codebase DATA: {
+  "directory": "/Users/sly/GitHub/agentloop_test_project/.worktrees/task-64",
+  "fileCount": 9
+}
+[2026-03-05T14:02:50.268Z] [DEBUG] [AGENT_ACTIVITY] [req_1772719370198_2oomgsakv] Agent conductor: indexing completed DATA: {
+  "agentId": "conductor",
+  "directory": "/Users/sly/GitHub/agentloop_test_project/.worktrees/task-64",
+  "incremental": false,
+  "excludePatterns": [
+    "node_modules/**",
+    ".git/**",
+    ".agentloop/**",
+    "dist/**",
+    "build/**",
+    "out/**",
+    ".next/**",
+    ".nuxt/**",
+    "coverage/**",
+    ".nyc_output/**",
+    "__pycache__/**",
+    "*.pyc",
+    ".pytest_cache/**",
+    "venv/**",
+    "env/**",
+    ".venv/**",
+    ".env/**",
+    "vendor/**",
+    "target/**",
+    ".gradle/**",
+    ".idea/**",
+    ".vscode/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__tests__/**",
+    "**/.memory_bank/**",
+    "tmp/**",
+    "temp/**",
+    "**/tmp/**",
+    "**/temp/**",
+    "*.log",
+    "*.tmp",
+    "*.cache",
+    "*.zip",
+    "*.tar",
+    "*.tar.gz",
+    "*.tgz",
+    "*.gz",
+    "*.bz2",
+    "*.xz",
+    "*.7z",
+    "*.rar",
+    "*.zst",
+    ".DS_Store",
+    "Thumbs.db"
+  ],
+  "entitiesFound": 0
+}
+[2026-03-05T14:02:50.268Z] [INFO] [MCP_RESPONSE] [req_1772719370198_2oomgsakv] MCP response: index DATA: {
+  "method": "index",
+  "result": {
+    "taskId": "index-1772719370231",
+    "status": "completed",
+    "complexity": 1,
+    "delegations": [
+      {
+        "agent": "dev-agent",
+        "timestamp": 1772719370231
+      }
+    ],
+    "results": [
+      {
+        "status": "completed",
+        "directory": "/Users/sly/GitHub/agentloop_test_project/.worktrees/task-64",
+        "incremental": false,
+        "excludePatterns": [
+          "node_modules/**",
+          ".git/**",
+          ".agentloop/**",
+          "dist/**",
+          "build/**",
+          "out/**",
+          ".next/**",
+          ".nuxt/**",
+          "coverage/**",
+          ".nyc_output/**",
+          "__pycache__/**",
+          "*.pyc",
+          ".pytest_cache/**",
+          "venv/**",
+          "env/**",
+          ".venv/**",
+          ".env/**",
+          "vendor/**",
+          "target/**",
+          ".gradle/**",
+          ".idea/**",
+          ".vscode/**",
+          "**/test/**",
+          "**/tests/**",
+          "**/__tests__/**",
+          "**/.memory_bank/**",
+          "tmp/**",
+          "temp/**",
+          "**/tmp/**",
+          "**/temp/**",
+          "*.log",
+          "*.tmp",
+          "*.cache",
+          "*.zip",
+          "*.tar",
+          "*.tar.gz",
+          "*.tgz",
+          "*.gz",
+          "*.bz2",
+          "*.xz",
+          "*.7z",
+          "*.rar",
+          "*.zst",
+          ".DS_Store",
+          "Thumbs.db"
+        ],
+        "batchMode": false,
+        "timestamp": 1772719370232,
+        "filesProcessed": 7,
+        "entitiesExtracted": 28,
+        "relationshipsCreated": 3,
+        "totalFiles": 7,
+        "message": "Real indexing completed for /Users/sly/GitHub/agentloop_test_project/.worktrees/task-64"
+      }
+    ],
+    "synthesizedAt": 1772719370268
+  }
+} DURATION: 70ms
+[2026-03-05T14:02:55.205Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:02:55.205Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:02:55.205Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:02:55.205Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:00.205Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:00.207Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:00.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:00.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:05.206Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:05.207Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:05.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:05.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:10.206Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:10.207Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:10.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:10.207Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:15.208Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:15.208Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:15.208Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:15.208Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:20.208Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:20.211Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:20.211Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:20.211Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:25.210Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:25.210Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:25.210Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:25.210Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:30.210Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:30.212Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:30.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:30.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:35.211Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:35.212Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:35.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:35.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:40.212Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:40.212Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:40.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:40.212Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:45.213Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:45.213Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:45.213Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:45.213Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:50.213Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:50.215Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:50.215Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:50.216Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 78,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:03:55.215Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:03:55.215Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:03:55.215Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:03:55.215Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:00.215Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:00.215Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:00.215Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:00.215Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:05.216Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:05.217Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:05.217Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:05.217Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:10.217Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:10.217Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:10.217Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:10.217Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:15.218Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:15.218Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:15.219Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:15.219Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:20.219Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:20.219Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:20.219Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:20.219Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:25.220Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:25.220Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:25.220Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:25.220Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:30.220Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:30.221Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:30.221Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:30.221Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:35.222Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:35.223Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:35.223Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:35.223Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:40.222Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:40.222Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:40.222Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:40.223Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:45.223Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:45.223Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:45.223Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:45.223Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:50.224Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:50.224Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:50.224Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:50.224Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:04:55.225Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:04:55.225Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:04:55.225Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:04:55.225Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:00.225Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:00.226Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:00.226Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:00.226Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:05.227Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:05.227Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:05.227Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:05.227Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:10.227Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:10.228Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:10.228Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:10.228Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:15.228Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:15.229Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:15.229Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:15.229Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:20.229Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:20.229Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:20.229Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:20.229Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:25.230Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:25.230Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:25.230Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:25.230Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:30.231Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:30.231Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:30.231Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:30.231Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:35.232Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:35.232Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:35.232Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:35.232Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:40.232Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:40.233Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:40.233Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:40.233Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:45.233Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:45.234Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:45.234Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:45.234Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:50.234Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:50.235Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:50.235Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:50.235Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:05:55.235Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:05:55.236Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:05:55.236Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:05:55.236Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:00.237Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:00.237Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:00.237Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:00.237Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:05.237Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:05.237Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:05.237Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:05.237Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:10.238Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:10.238Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:10.238Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:10.238Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:15.239Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:15.239Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:15.239Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:15.239Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:20.240Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:20.240Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:20.240Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:20.240Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:25.240Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:25.240Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:25.241Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:25.241Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:30.241Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:30.242Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:30.242Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:30.242Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:35.242Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:35.243Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:35.243Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:35.243Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:40.243Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:40.243Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:40.243Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:40.243Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:45.244Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:45.244Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:45.244Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:45.244Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:50.245Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:50.245Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:50.245Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:50.245Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:06:55.246Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:06:55.246Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:06:55.246Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:06:55.246Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:07:00.248Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:07:00.248Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:07:00.248Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:07:00.248Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:07:05.250Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:07:05.250Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:07:05.251Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:07:05.251Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:07:10.252Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:07:10.252Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:07:10.252Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:07:10.253Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:07:15.252Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:07:15.253Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:07:15.253Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:07:15.253Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
+[2026-03-05T14:07:20.254Z] [INFO] [SYSTEM] HEARTBEAT DATA: {
+  "agents": 3,
+  "pendingTasks": 0,
+  "taskQueueLimit": 100,
+  "maxConcurrentAgents": 10
+}
+[2026-03-05T14:07:20.255Z] [DEBUG] [AGENT_ACTIVITY] Agent semantic-1f470d0d: heartbeat DATA: {
+  "agentId": "semantic-1f470d0d",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370206,
+  "queue": 0
+}
+[2026-03-05T14:07:20.255Z] [DEBUG] [AGENT_ACTIVITY] Agent dev-948a022e: heartbeat DATA: {
+  "agentId": "dev-948a022e",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370268,
+  "queue": 0
+}
+[2026-03-05T14:07:20.255Z] [DEBUG] [AGENT_ACTIVITY] Agent dora-e49d5a42: heartbeat DATA: {
+  "agentId": "dora-e49d5a42",
+  "status": "idle",
+  "memMB": 71,
+  "cpuPct": 5,
+  "lastActivity": 1772719370231,
+  "queue": 0
+}
