@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+
+if __package__ is None or __package__ == "":
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from backend.weather_client import WeatherClient, WeatherServiceError
 
