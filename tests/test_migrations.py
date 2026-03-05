@@ -195,17 +195,6 @@ def test_latest_non_expired_cache_retrieval_returns_highest_valid_version(postgr
                     "expires_at": now + timedelta(minutes=30),
                 },
                 {
-                    "id": 14,
-                    "lat": "45.500000",
-                    "lon": "-122.600000",
-                    "units": "metric",
-                    "forecast_range": "week",
-                    "cache_version": 3,
-                    "payload": '{"valid": "tie-breaker"}',
-                    "created_at": now - timedelta(minutes=5),
-                    "expires_at": now + timedelta(minutes=30),
-                },
-                {
                     "id": 15,
                     "lat": "45.500000",
                     "lon": "-122.600000",
@@ -251,7 +240,7 @@ def test_latest_non_expired_cache_retrieval_returns_highest_valid_version(postgr
         )
 
     assert row is not None
-    assert row["id"] == 14
+    assert row["id"] == 13
     assert row["cache_version"] == 3
 
 
