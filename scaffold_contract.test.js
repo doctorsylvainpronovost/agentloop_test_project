@@ -1,10 +1,11 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const rootDir = __dirname;
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 test('requirements.txt remains intentionally empty', () => {
   const requirementsPath = path.join(rootDir, 'requirements.txt');

@@ -1,7 +1,13 @@
 {
-  "name": "python-backend-scaffold",
+  "name": "typescript-vite-webapp-scaffold",
   "private": true,
+  "type": "module",
   "scripts": {
+    "build": "vite build",
     "test": "node --test && python3 -m pytest -q"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vite": "^5.4.11"
   }
 }
