@@ -19,6 +19,23 @@ test("resolveApiBaseUrl trims trailing slash and validates absolute URL", () => 
   assert.throws(() => resolveApiBaseUrl("/api"), /VITE_API_BASE_URL must be an absolute URL/);
 });
 
+test("resolveApiBaseUrl supports legacy backend env variable names", () => {
+  assert.equal(resolveApiBaseUrl(undefined, { VITE_BACKEND_URL: "https://legacy.example.com/" }), "https://legacy.example.com");
+  assert.equal(
+    resolveApiBaseUrl(undefined, { VITE_BACKEND_BASE_URL: "https://base.example.com/" }),
+    "https://base.example.com",
+  );
+});
+
+test("resolveApiBaseUrl prioritizes explicit config over environment", () => {
+  const endpoint = resolveApiBaseUrl("https://override.example.com", {
+    VITE_API_BASE_URL: "https://api.example.com",
+    VITE_BACKEND_URL: "https://legacy.example.com",
+  });
+
+  assert.equal(endpoint, "https://override.example.com");
+});
+
 test("buildForecastRequest includes backend base URL, location, and selected range", () => {
   const endpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
 

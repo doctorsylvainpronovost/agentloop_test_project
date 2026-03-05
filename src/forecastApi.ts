@@ -10,6 +10,12 @@ type RequestOptions = {
   apiBaseUrl?: string;
 };
 
+type FrontendEnv = {
+  VITE_API_BASE_URL?: string;
+  VITE_BACKEND_URL?: string;
+  VITE_BACKEND_BASE_URL?: string;
+};
+
 export type WeatherPayload = {
   city: string;
   temperature: number;
@@ -45,19 +51,19 @@ export const rangeLabels: Record<ForecastRange, string> = {
 
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
 
-const readFrontendEnv = (): { VITE_API_BASE_URL?: string } => {
+const readFrontendEnv = (): FrontendEnv => {
   const importMeta = import.meta as ImportMeta & {
-    env?: {
-      VITE_API_BASE_URL?: string;
-    };
+    env?: FrontendEnv;
   };
 
   return importMeta.env ?? {};
 };
 
-export const resolveApiBaseUrl = (configuredBaseUrl = readFrontendEnv().VITE_API_BASE_URL): string => {
-  const normalized = configuredBaseUrl?.trim() ?? "";
-  const value = normalized || DEFAULT_API_BASE_URL;
+export const resolveApiBaseUrl = (configuredBaseUrl?: string, env: FrontendEnv = readFrontendEnv()): string => {
+  const normalizedConfigured = configuredBaseUrl?.trim() ?? "";
+  const normalizedPrimary = env.VITE_API_BASE_URL?.trim() ?? "";
+  const normalizedCompatibility = env.VITE_BACKEND_URL?.trim() || env.VITE_BACKEND_BASE_URL?.trim() || "";
+  const value = normalizedConfigured || normalizedPrimary || normalizedCompatibility || DEFAULT_API_BASE_URL;
 
   let parsedUrl: URL;
   try {
