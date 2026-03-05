@@ -36,10 +36,13 @@ def test_root_level_pytest_discovery_for_alembic_heads() -> None:
     assert "0001_baseline" in heads.stdout
 
 
-def test_db_verification_script_includes_repeatability_and_plan_checks() -> None:
+def test_db_verification_script_includes_acceptance_criteria_test_filters() -> None:
     script = (ROOT / "scripts" / "verify_db_migration_and_cache_plan.sh").read_text(encoding="utf-8")
 
-    assert "migration_repeatability_and_weather_cache_latest_query_plan" in script
-    assert "upgrade_and_downgrade_round_trip_with_constraint_enforcement" in script
+    assert "migration_repeatability_and_revision_integrity" in script
+    assert "weather_cache_composite_uniqueness_and_versioning" in script
+    assert "latest_non_expired_cache_retrieval_returns_highest_valid_version" in script
+    assert "latest_non_expired_query_plan_prefers_weather_cache_index" in script
+    assert "weather_cache_schema_documentation_is_present_and_accurate" in script
     assert "--junitxml" in script
     assert "Database verification requires executed integration tests" in script
