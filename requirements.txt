@@ -3,3 +3,4 @@ uvicorn==0.30.6
 alembic==1.13.2
 sqlalchemy==2.0.36
 psycopg[binary]==3.2.13
+pytest==8.3.5
