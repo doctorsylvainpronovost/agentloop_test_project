@@ -1,0 +1,35 @@
+[36m[7:54:03 AM] INFO [SYSTEM][0m Initializing script hooks (ScriptHookHandler)[36m[7:54:03 AM] INFO [SYSTEM][0m No hook definitions found (ScriptHookHandler)[36m[7:54:03 AM] INFO [SYSTEM][0m Initializing script hooks (ScriptHookHandler)[36m[7:54:03 AM] INFO [SYSTEM][0m No hook definitions found (ScriptHookHandler)[36m[7:54:07 AM] INFO [SYSTEM][0m Binary change watcher started (daemon-binary-watcher)
+{
+  "ownHash": "9db76f78",
+  "checkIntervalMs": 30000,
+  "debounceMs": 15000,
+  "cooldownMs": 300000,
+  "activeClientBehavior": "defer",
+  "maxRestartsPerHour": 2
+}[36m[7:54:16 AM] INFO [SYSTEM][0m Destroying script hooks (ScriptHookHandler)[36m[7:54:16 AM] INFO [SYSTEM][0m Script hooks destroyed (ScriptHookHandler)[36m[7:54:16 AM] INFO [SYSTEM][0m Initializing script hooks (ScriptHookHandler)[36m[7:54:16 AM] INFO [SYSTEM][0m No hook definitions found (ScriptHookHandler)[36m[7:54:18 AM] INFO [SYSTEM][0m Binary change watcher started (daemon-binary-watcher)
+{
+  "ownHash": "9db76f78",
+  "checkIntervalMs": 30000,
+  "debounceMs": 15000,
+  "cooldownMs": 300000,
+  "activeClientBehavior": "defer",
+  "maxRestartsPerHour": 2
+}[36m[7:55:50 AM] INFO [ORCHESTRATOR][0m Query started (OrchestratorDaemon)
+{
+  "requestId": "req_1772715350309_j3y3g6w43",
+  "sessionId": "none (first query)",
+  "model": "openai/gpt-5.3-codex",
+  "promptPreview": "Design a PostgreSQL schema (with migrations) for a geolocated weather app. Create tables for users ("
+}[36m[7:56:02 AM] INFO [ORCHESTRATOR][0m Query started (OrchestratorDaemon)
+{
+  "requestId": "req_1772715362866_lmxrg8h1d",
+  "sessionId": "opencode-1772715350330",
+  "model": "openai/gpt-5.3-codex",
+  "promptPreview": "Build a FastAPI backend using the Postgres schema. Integrate OpenWeatherMap (https://openweathermap."
+}[36m[7:56:17 AM] INFO [ORCHESTRATOR][0m Query started (OrchestratorDaemon)
+{
+  "requestId": "req_1772715377721_ft8wnwz9q",
+  "sessionId": "opencode-1772715362876",
+  "model": "openai/gpt-5.3-codex",
+  "promptPreview": "Build a Svelte frontend that calls the FastAPI backend. Create a simple UI that lets the user type a"
+}
