@@ -1,5 +1,5 @@
 {
-  "name": "weather-api-migrations",
+  "name": "weather-webapp-scaffold",
   "private": true,
   "scripts": {
     "test": "npm run test:frontend && npm run test:backend && node --test tests/package-setup.test.mjs",
@@ -9,10 +9,18 @@
     "test:db:verification": "./scripts/verify_db_migration_and_cache_plan.sh",
     "test:frontend": "node --test tests/frontend-build.test.mjs",
     "test:backend": "python3 -m unittest discover -s tests -p test_backend.py",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "verify:build": "npm run build",
+    "backend:dev": "uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000",
+    "backend:start": "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
-  }
+  },
+  "version": "1.0.0",
+  "type": "module"
 }
