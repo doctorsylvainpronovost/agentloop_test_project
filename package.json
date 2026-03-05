@@ -2,6 +2,7 @@
   "name": "weather-api-migrations",
   "private": true,
   "scripts": {
-    "test": "python3 -m pytest"
+    "test": "node --test",
+    "test:python": "python3 -m pytest"
   }
 }
