@@ -64,3 +64,28 @@ test('alembic can discover and render the deterministic revision chain', () => {
   assert.equal(upgradeSql.status, 0, upgradeSql.stderr || 'alembic upgrade --sql failed');
   assert.match(upgradeSql.stdout, /0001_baseline/);
 });
+
+test('baseline migration and README document cache schema strategy', () => {
+  const baselineRevisionPath = path.join(ROOT, 'alembic', 'versions', '0001_baseline.py');
+  const alembicReadmePath = path.join(ROOT, 'alembic', 'README');
+
+  const migrationText = fs.readFileSync(baselineRevisionPath, 'utf8');
+  const readmeText = fs.readFileSync(alembicReadmePath, 'utf8');
+
+  assert.match(migrationText, /create_table\(\s*"users"/s);
+  assert.match(migrationText, /create_table\(\s*"saved_locations"/s);
+  assert.match(migrationText, /create_table\(\s*"weather_cache"/s);
+  assert.match(
+    migrationText,
+    /UniqueConstraint\(\s*"location_name",\s*"units",\s*"forecast_date",\s*"fetched_at"/s,
+  );
+  assert.match(migrationText, /expires_at/);
+  assert.match(migrationText, /expires_at > NOW\(\)/);
+  assert.match(migrationText, /ORDER BY fetched_at DESC/);
+
+  assert.match(readmeText, /`users`/);
+  assert.match(readmeText, /`saved_locations`/);
+  assert.match(readmeText, /`weather_cache`/);
+  assert.match(readmeText, /expires_at <= NOW\(\)/);
+  assert.match(readmeText, /ORDER BY fetched_at DESC LIMIT 1/);
+});

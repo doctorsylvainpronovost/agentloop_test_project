@@ -71,3 +71,26 @@ def test_migration_commands_history_and_upgrade_sql() -> None:
 
     repeat_upgrade_sql = run_alembic("upgrade", "head", "--sql")
     assert repeat_upgrade_sql.returncode == 0, repeat_upgrade_sql.stderr
+
+
+def test_baseline_sql_includes_cache_constraints_and_lookup_index() -> None:
+    upgrade_sql = run_alembic("upgrade", "head", "--sql")
+    assert upgrade_sql.returncode == 0, upgrade_sql.stderr
+
+    sql_text = upgrade_sql.stdout
+    assert "CREATE TABLE users" in sql_text
+    assert "CREATE TABLE saved_locations" in sql_text
+    assert "CREATE TABLE weather_cache" in sql_text
+    assert "CONSTRAINT uq_weather_cache_version UNIQUE (location_name, units, forecast_date, fetched_at)" in sql_text
+    assert "CREATE INDEX ix_weather_cache_lookup" in sql_text
+    assert "expires_at TIMESTAMP WITH TIME ZONE NOT NULL" in sql_text
+
+
+def test_readme_documents_cache_ttl_and_lookup_query() -> None:
+    readme = (ROOT / "alembic" / "README").read_text(encoding="utf-8")
+
+    assert "`users`" in readme
+    assert "`saved_locations`" in readme
+    assert "`weather_cache`" in readme
+    assert "expires_at <= NOW()" in readme
+    assert "ORDER BY fetched_at DESC LIMIT 1" in readme
