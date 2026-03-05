@@ -6,12 +6,51 @@ import {
   fetchForecast,
   formatCoordinateLabel,
   getCurrentCoordinates,
+  resolveApiBaseUrl,
 } from "../src/forecastApi";
 
-test("buildForecastRequest includes location and selected range", () => {
+test("resolveApiBaseUrl uses localhost backend when env is missing", () => {
+  assert.equal(resolveApiBaseUrl(undefined), "http://localhost:8000");
+  assert.equal(resolveApiBaseUrl("   "), "http://localhost:8000");
+});
+
+test("resolveApiBaseUrl trims trailing slash and validates absolute URL", () => {
+  assert.equal(resolveApiBaseUrl("http://localhost:8000/"), "http://localhost:8000");
+  assert.throws(() => resolveApiBaseUrl("/api"), /VITE_API_BASE_URL must be an absolute URL/);
+});
+
+test("resolveApiBaseUrl supports legacy backend env variable names", () => {
+  assert.equal(resolveApiBaseUrl(undefined, { VITE_BACKEND_URL: "https://legacy.example.com/" }), "https://legacy.example.com");
+  assert.equal(
+    resolveApiBaseUrl(undefined, { VITE_BACKEND_BASE_URL: "https://base.example.com/" }),
+    "https://base.example.com",
+  );
+});
+
+test("resolveApiBaseUrl prioritizes explicit config over environment", () => {
+  const endpoint = resolveApiBaseUrl("https://override.example.com", {
+    VITE_API_BASE_URL: "https://api.example.com",
+    VITE_BACKEND_URL: "https://legacy.example.com",
+  });
+
+  assert.equal(endpoint, "https://override.example.com");
+});
+
+
+test("resolveApiBaseUrl prioritizes VITE_API_BASE_URL over compatibility env vars", () => {
+  const endpoint = resolveApiBaseUrl(undefined, {
+    VITE_API_BASE_URL: "https://api.example.com/",
+    VITE_BACKEND_URL: "https://legacy.example.com/",
+    VITE_BACKEND_BASE_URL: "https://fallback.example.com/",
+  });
+
+  assert.equal(endpoint, "https://api.example.com");
+});
+
+test("buildForecastRequest includes backend base URL, location, and selected range", () => {
   const endpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
 
-  assert.equal(endpoint, "/api/weather?city=Paris&range=three-day");
+  assert.equal(endpoint, "http://localhost:8000/api/weather?city=Paris&range=three-day");
 });
 
 test("buildForecastRequest includes coordinates when available", () => {
@@ -21,11 +60,26 @@ test("buildForecastRequest includes coordinates when available", () => {
     coordinates: { lat: 48.857, lon: 2.352 },
   });
 
-  assert.equal(endpoint, "/api/weather?city=48.857%2C+2.352&range=day&lat=48.857&lon=2.352");
+  assert.equal(
+    endpoint,
+    "http://localhost:8000/api/weather?city=48.857%2C+2.352&range=day&lat=48.857&lon=2.352",
+  );
 });
 
-test("fetchForecast normalizes backend response", async () => {
-  const fakeFetch: typeof fetch = async () => {
+test("buildForecastRequest respects configured backend base URL", () => {
+  const endpoint = buildForecastRequest(
+    { location: "Paris", range: "day" },
+    { apiBaseUrl: "https://api.example.com/" },
+  );
+
+  assert.equal(endpoint, "https://api.example.com/api/weather?city=Paris&range=day");
+});
+
+test("fetchForecast calls backend endpoint contract with expected method and path", async () => {
+  const calls: string[] = [];
+  const fakeFetch: typeof fetch = async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+
     return new Response(
       JSON.stringify({
         data: {
@@ -40,12 +94,27 @@ test("fetchForecast normalizes backend response", async () => {
     );
   };
 
-  const result = await fetchForecast({ location: "Paris", range: "day" }, fakeFetch);
+  const result = await fetchForecast({ location: "Paris", range: "day" }, fakeFetch, {
+    apiBaseUrl: "http://127.0.0.1:8000",
+  });
 
   assert.equal(result.locationLabel, "Paris");
   assert.equal(result.range, "day");
   assert.equal(result.weather.city, "Paris");
   assert.equal(result.source, "openweathermap");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0], "http://127.0.0.1:8000/api/weather?city=Paris&range=day");
+});
+
+test("fetchForecast fails fast on misconfigured backend base URL", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    throw new Error("fetch should not run");
+  };
+
+  await assert.rejects(
+    () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch, { apiBaseUrl: "backend.local" }),
+    /VITE_API_BASE_URL must be an absolute URL/,
+  );
 });
 
 test("fetchForecast surfaces backend error details", async () => {
