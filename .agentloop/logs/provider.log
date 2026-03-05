@@ -157,3 +157,83 @@
 [2026-03-05T12:56:38.803Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"llm/query","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
 [2026-03-05T12:56:38.803Z] [INFO] [SDK] Provider SDK: @ai-sdk/openai for openai/gpt-5.3-codex {"providerID":"openai","modelID":"gpt-5.3-codex","sdkPackage":"@ai-sdk/openai","baseURL":"default"}
 [2026-03-05T12:56:38.810Z] [INFO] [COMPLETE] API call complete: openai/gpt-5.3-codex {"providerID":"openai","modelID":"gpt-5.3-codex","inputTokens":0,"outputTokens":0,"durationMs":3}
+[2026-03-05T13:00:32.207Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:00:32.207Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:00:32.207Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:01:38.744Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:01:38.744Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:01:38.744Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:01:38.744Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:01:38.744Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:01:38.744Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:01:38.745Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:01:38.745Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:02:45.418Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:02:45.419Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:02:45.419Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:05:54.328Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:05:54.328Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:05:54.328Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:10:03.606Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:10:03.606Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:10:03.606Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:15:14.303Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:15:14.304Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:15:14.304Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:21:26.881Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:21:26.882Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:21:26.882Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:28:41.119Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:28:41.120Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:28:41.120Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:36:56.331Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:36:56.331Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:36:56.331Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:50:08.478Z] [INFO] [ROUTE] openai/gpt-5.3-codex -> opencode {"originalModel":"openai/gpt-5.3-codex","normalizedModel":"openai/gpt-5.3-codex","routeType":"opencode","providerId":"openai","modelId":"gpt-5.3-codex","reason":"openai model routes to OpenCode provider","requiresAuth":true}
+[2026-03-05T13:50:08.479Z] [INFO] [LLM_PROVIDER] Entering LLM provider path: openai/gpt-5.3-codex {"caller":"bt-llm-executor","providerID":"openai","modelID":"gpt-5.3-codex","codePath":"Vercel AI SDK","sdkPackage":"@ai-sdk/openai"}
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY] ============================================================
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY] PROVIDER VERIFICATION for "openai/gpt-5.3-codex"
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY]   Code Path : LLM Provider (Vercel AI SDK)
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY]   Provider  : openai
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY]   API Target: https://api.openai.com
+[2026-03-05T13:50:08.479Z] [INFO] [VERIFY] ============================================================
