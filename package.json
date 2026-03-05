@@ -2,7 +2,8 @@
   "name": "weather-api-migrations",
   "private": true,
   "scripts": {
-    "test": "node --test",
-    "test:python": "python3 -m pytest"
+    "test": "python3 -m pytest",
+    "test:python": "python3 -m pytest",
+    "test:node": "node --test migration-tooling.test.js"
   }
 }
