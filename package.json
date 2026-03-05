@@ -5,6 +5,7 @@
     "test": "node --test migration-tooling.test.js",
     "test:python": "python3 -m pytest",
     "test:node": "node --test migration-tooling.test.js",
-    "test:all": "node --test migration-tooling.test.js && python3 -m pytest"
+    "test:all": "node --test migration-tooling.test.js && python3 -m pytest && npm run test:db:verification",
+    "test:db:verification": "./scripts/verify_db_migration_and_cache_plan.sh"
   }
 }

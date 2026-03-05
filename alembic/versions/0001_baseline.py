@@ -58,12 +58,47 @@ def upgrade() -> None:
         ),
     )
 
+    op.create_table(
+        "weather_cache",
+        sa.Column("id", sa.BigInteger(), primary_key=True, nullable=False),
+        sa.Column(
+            "latitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
+            nullable=False,
+        ),
+        sa.Column(
+            "longitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
+            nullable=False,
+        ),
+        sa.Column("units", sa.String(length=16), nullable=False),
+        sa.Column("forecast_range", sa.String(length=16), nullable=False),
+        sa.Column("payload", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.CheckConstraint(
+            "latitude >= -90 AND latitude <= 90",
+            name="ck_weather_cache_latitude_range",
+        ),
+        sa.CheckConstraint(
+            "longitude >= -180 AND longitude <= 180",
+            name="ck_weather_cache_longitude_range",
+        ),
+    )
+
     op.create_index("ix_saved_locations_user_id", "saved_locations", ["user_id"])
     op.create_index("ix_saved_locations_user_id_name", "saved_locations", ["user_id", "name"])
+    op.create_index(
+        "ix_weather_cache_lookup_latest_non_expired",
+        "weather_cache",
+        ["latitude", "longitude", "units", "forecast_range", sa.text("expires_at DESC")],
+    )
 
 
 def downgrade() -> None:
+    op.drop_index("ix_weather_cache_lookup_latest_non_expired", table_name="weather_cache")
     op.drop_index("ix_saved_locations_user_id_name", table_name="saved_locations")
     op.drop_index("ix_saved_locations_user_id", table_name="saved_locations")
+    op.drop_table("weather_cache")
     op.drop_table("saved_locations")
     op.drop_table("users")
