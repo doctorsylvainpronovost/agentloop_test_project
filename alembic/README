@@ -1,1 +1,9 @@
 Alembic migrations for the FastAPI weather backend.
+
+Schema notes (see `alembic/versions/0001_baseline.py`):
+- `users`: registered API users; parent row for user-owned weather preferences.
+- `saved_locations`: user-specific saved places, unique per `(user_id, location_name, country_code)`.
+- `weather_cache`: versioned weather snapshots. Uniqueness is `(location_name, units, forecast_date, fetched_at)` so each fetch timestamp stores one snapshot while allowing newer refreshes.
+- TTL: `expires_at` marks cache freshness; rows are stale once `expires_at <= NOW()`.
+- Recommended lookup for the latest fresh cache hit:
+  `SELECT payload, fetched_at, expires_at FROM weather_cache WHERE location_name = :location_name AND units = :units AND forecast_date = :forecast_date AND expires_at > NOW() ORDER BY fetched_at DESC LIMIT 1;`
