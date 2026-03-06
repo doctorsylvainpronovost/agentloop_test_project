@@ -2,63 +2,58 @@ import { type FormEvent, useMemo, useRef, useState } from "react";
 import {
   fetchForecast,
   formatCoordinateLabel,
-  type ForecastRange,
   type ForecastResponse,
   getCurrentCoordinates,
   rangeLabels,
+  type WeatherRequestErrorKind,
 } from "./forecastApi";
 
-const ranges: ForecastRange[] = ["day", "three-day", "week"];
-
-const buildManualRequestKey = (location: string, range: ForecastRange): string => {
-  return `manual:${location.trim().toLowerCase()}|${range}`;
+const buildManualRequestKey = (location: string): string => {
+  return `manual:${location.trim().toLowerCase()}`;
 };
 
-const buildGeoRequestKey = (location: string, range: ForecastRange): string => {
-  return `geo:${location.toLowerCase()}|${range}`;
+const buildGeoRequestKey = (location: string): string => {
+  return `geo:${location.toLowerCase()}`;
+};
+
+const fallbackMessages: Record<WeatherRequestErrorKind, string> = {
+  validation: "Weather request was invalid. Please verify the city name and try again.",
+  network: "Network error while fetching weather. Please check your connection and retry.",
+  "malformed-payload": "Weather data was malformed. Please try again later.",
+  unknown: "Unable to fetch weather right now. Please try again shortly.",
 };
 
 const App = (): React.JSX.Element => {
   const [location, setLocation] = useState("");
-  const [selectedRange, setSelectedRange] = useState<ForecastRange>("day");
   const [result, setResult] = useState<ForecastResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeRequestKey, setActiveRequestKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
-  const manualRequestKey = useMemo(() => buildManualRequestKey(location, selectedRange), [location, selectedRange]);
+  const manualRequestKey = useMemo(() => buildManualRequestKey(location), [location]);
 
-  const runForecastRequest = async (
-    targetLocation: string,
-    range: ForecastRange,
-    requestKey: string,
-    coordinates?: { lat: number; lon: number },
-  ): Promise<void> => {
+  const runForecastRequest = async (targetLocation: string, requestKey: string): Promise<void> => {
     const thisRequestId = ++requestIdRef.current;
     setLoading(true);
     setActiveRequestKey(requestKey);
     setError(null);
 
-    try {
-      const data = await fetchForecast({ location: targetLocation, range, coordinates });
-      if (thisRequestId !== requestIdRef.current) {
-        return;
-      }
-      setResult(data);
-    } catch (requestError) {
-      if (thisRequestId !== requestIdRef.current) {
-        return;
-      }
-      const message = requestError instanceof Error ? requestError.message : "Something went wrong.";
-      setResult(null);
-      setError(message);
-    } finally {
-      if (thisRequestId === requestIdRef.current) {
-        setLoading(false);
-        setActiveRequestKey(null);
-      }
+    const response = await fetchForecast({ location: targetLocation });
+
+    if (thisRequestId !== requestIdRef.current) {
+      return;
     }
+
+    if (response.ok) {
+      setResult(response.data);
+    } else {
+      setResult(null);
+      setError(response.error.message || fallbackMessages[response.error.kind]);
+    }
+
+    setLoading(false);
+    setActiveRequestKey(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -69,7 +64,7 @@ const App = (): React.JSX.Element => {
 
     if (!inputValue) {
       setResult(null);
-      setError("Please enter a location before requesting a forecast.");
+      setError("Please enter a location before requesting weather.");
       return;
     }
 
@@ -77,12 +72,12 @@ const App = (): React.JSX.Element => {
       setLocation(inputValue);
     }
 
-    const requestKey = buildManualRequestKey(inputValue, selectedRange);
+    const requestKey = buildManualRequestKey(inputValue);
     if (loading && activeRequestKey === requestKey) {
       return;
     }
 
-    await runForecastRequest(inputValue, selectedRange, requestKey);
+    await runForecastRequest(inputValue, requestKey);
   };
 
   const handleDetectLocation = async (): Promise<void> => {
@@ -96,11 +91,11 @@ const App = (): React.JSX.Element => {
       const coordinates = await getCurrentCoordinates();
       const coordinateLabel = formatCoordinateLabel(coordinates);
       setLocation(coordinateLabel);
-      const requestKey = buildGeoRequestKey(coordinateLabel, selectedRange);
+      const requestKey = buildGeoRequestKey(coordinateLabel);
       if (loading && activeRequestKey === requestKey) {
         return;
       }
-      await runForecastRequest(coordinateLabel, selectedRange, requestKey, coordinates);
+      await runForecastRequest(coordinateLabel, requestKey);
     } catch (geolocationError) {
       const message = geolocationError instanceof Error ? geolocationError.message : "Unable to detect location.";
       setResult(null);
@@ -115,7 +110,7 @@ const App = (): React.JSX.Element => {
     <main className="weather-shell">
       <section className="card">
         <h1>Weather Forecast</h1>
-        <p className="intro">Enter a city or use auto-detect, then choose a forecast window.</p>
+        <p className="intro">Enter a city or use auto-detect to fetch today's weather.</p>
 
         <form className="forecast-form" onSubmit={handleSubmit}>
           <label htmlFor="location-input">Location</label>
@@ -133,26 +128,8 @@ const App = (): React.JSX.Element => {
             </button>
           </div>
 
-          <fieldset className="range-options">
-            <legend>Forecast range</legend>
-            <div className="range-grid">
-              {ranges.map((range) => (
-                <label key={range}>
-                  <input
-                    type="radio"
-                    name="forecast-range"
-                    value={range}
-                    checked={selectedRange === range}
-                    onChange={() => setSelectedRange(range)}
-                  />
-                  {rangeLabels[range]}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
           <button type="submit" className="submit" disabled={submitDisabled}>
-            {loading ? "Loading..." : "Get forecast"}
+            {loading ? "Loading..." : "Get weather"}
           </button>
         </form>
 
@@ -160,7 +137,7 @@ const App = (): React.JSX.Element => {
           {error ? <p className="error">{error}</p> : null}
           {result ? (
             <article className="result">
-              <h2>{rangeLabels[result.range]}</h2>
+              <h2>{rangeLabels.day}</h2>
               <p>
                 <strong>Requested for:</strong> {result.locationLabel}
               </p>
@@ -168,14 +145,14 @@ const App = (): React.JSX.Element => {
                 <strong>City:</strong> {result.weather.city}
               </p>
               <p>
-                <strong>Temperature:</strong> {result.weather.temperature} {result.weather.units === "metric" ? "C" : "F"}
+                <strong>Temperature:</strong> {result.weather.temperature}
               </p>
               <p>
                 <strong>Conditions:</strong> {result.weather.description}
               </p>
             </article>
           ) : (
-            <p className="hint">Forecast details appear here after a request.</p>
+            <p className="hint">Weather details appear here after a request.</p>
           )}
         </section>
       </section>

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 
 import React from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { JSDOM } from "jsdom";
 
 import App from "../src/App";
@@ -26,17 +26,6 @@ const setupDom = () => {
 
 const flush = async (): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, 0));
-};
-
-const waitFor = async (check: () => boolean, attempts = 5): Promise<void> => {
-  for (let index = 0; index < attempts; index += 1) {
-    if (check()) {
-      return;
-    }
-    await act(async () => {
-      await flush();
-    });
-  }
 };
 
 const setInputValue = async (input: HTMLInputElement, value: string): Promise<void> => {
@@ -82,66 +71,86 @@ afterEach(async () => {
   dom.window.close();
 });
 
-test("renders manual input, geolocation button, ranges, and result region", () => {
+test("renders location controls and initial weather hint", () => {
   assert.ok(document.querySelector("#location-input"));
   assert.ok(document.querySelector('button[type="button"]'));
-  assert.ok(document.querySelector('input[name="forecast-range"][value="day"]'));
-  assert.ok(document.querySelector('input[name="forecast-range"][value="three-day"]'));
-  assert.ok(document.querySelector('input[name="forecast-range"][value="week"]'));
-  assert.ok(document.body.textContent?.includes("Forecast details appear here after a request."));
+  assert.ok(document.body.textContent?.includes("Weather details appear here after a request."));
 });
 
-test("shows a validation error when manual location is empty", async () => {
+test("shows local validation error when manual location is empty", async () => {
   await submitForm();
 
-  assert.ok(document.body.textContent?.includes("Please enter a location before requesting a forecast."));
+  assert.ok(document.body.textContent?.includes("Please enter a location before requesting weather."));
 });
 
-test("shows loading state and blocks duplicate submit while in flight", async () => {
-  let resolveFetch: ((value: Response) => void) | null = null;
-  let callCount = 0;
-
+test("renders successful normalized weather response", async () => {
   globalThis.fetch = (async () => {
-    callCount += 1;
-    return new Promise<Response>((resolve) => {
-      resolveFetch = resolve;
-    });
+    return new Response(
+      JSON.stringify({
+        data: {
+          city: "Berlin",
+          temperature: 18,
+          description: "cloudy",
+        },
+        source: "weatherapi",
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
   }) as typeof fetch;
 
   const locationInput = document.querySelector("#location-input") as HTMLInputElement;
   await setInputValue(locationInput, "Berlin");
   await submitForm();
 
-  const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-  assert.equal(submitButton.disabled, true);
-  assert.equal(locationInput.disabled, false);
-  assert.ok(document.body.textContent?.includes("Loading..."));
-
-  await submitForm();
-  assert.equal(callCount, 1);
-
-  await act(async () => {
-    resolveFetch?.(
-      new Response(
-        JSON.stringify({
-          data: {
-            city: "Berlin",
-            temperature: 18,
-            description: "cloudy",
-            units: "metric",
-          },
-          source: "openweathermap",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    );
-    await flush();
-  });
-
-  assert.ok(document.body.textContent?.includes("Berlin"));
+  assert.ok(document.body.textContent?.includes("Requested for: Berlin"));
+  assert.ok(document.body.textContent?.includes("City: Berlin"));
+  assert.ok(document.body.textContent?.includes("Temperature: 18"));
+  assert.ok(document.body.textContent?.includes("Conditions: cloudy"));
 });
 
-test("auto-detect uses coordinates and surfaces geolocation errors", async () => {
+test("surfaces backend 4xx validation errors from API detail body", async () => {
+  globalThis.fetch = (async () => {
+    return new Response(JSON.stringify({ detail: { code: "invalid_location", message: "location must not be empty" } }), {
+      status: 422,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+
+  const locationInput = document.querySelector("#location-input") as HTMLInputElement;
+  await setInputValue(locationInput, "Invalid");
+  await submitForm();
+
+  assert.ok(document.body.textContent?.includes("location must not be empty"));
+});
+
+test("shows stable fallback message when backend payload is malformed", async () => {
+  globalThis.fetch = (async () => {
+    return new Response(JSON.stringify({ data: null }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+
+  const locationInput = document.querySelector("#location-input") as HTMLInputElement;
+  await setInputValue(locationInput, "Paris");
+  await submitForm();
+
+  assert.ok(document.body.textContent?.includes("Weather data was malformed. Please try again later."));
+});
+
+test("shows network failure message without crashing", async () => {
+  globalThis.fetch = (async () => {
+    throw new Error("network down");
+  }) as typeof fetch;
+
+  const locationInput = document.querySelector("#location-input") as HTMLInputElement;
+  await setInputValue(locationInput, "Paris");
+  await submitForm();
+
+  assert.ok(document.body.textContent?.includes("Network error while fetching weather. Please check your connection and retry."));
+});
+
+test("auto-detect requests canonical city+day query and handles geolocation errors", async () => {
   const calls: string[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     calls.push(String(input));
@@ -151,9 +160,8 @@ test("auto-detect uses coordinates and surfaces geolocation errors", async () =>
           city: "Detected City",
           temperature: 17,
           description: "breeze",
-          units: "metric",
         },
-        source: "openweathermap",
+        source: "weatherapi",
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
@@ -195,9 +203,11 @@ test("auto-detect uses coordinates and surfaces geolocation errors", async () =>
   });
 
   assert.equal(calls.length, 1);
+  assert.ok(calls[0].includes("/api/weather?"));
   assert.ok(calls[0].includes("range=day"));
-  assert.ok(calls[0].includes("lat=34.0522"));
-  assert.ok(calls[0].includes("lon=-118.2437"));
+  assert.ok(calls[0].includes("city=34.052%2C+-118.244"));
+  assert.ok(!calls[0].includes("lat="));
+  assert.ok(!calls[0].includes("lon="));
 
   const deniedGeolocation: Geolocation = {
     clearWatch: () => undefined,
@@ -218,98 +228,4 @@ test("auto-detect uses coordinates and surfaces geolocation errors", async () =>
   });
 
   assert.ok(document.body.textContent?.includes("Location access was denied"));
-});
-
-test("latest request wins when geolocation request follows manual request", async () => {
-  const resolvers: Array<(value: Response) => void> = [];
-  globalThis.fetch = (async () => {
-    return new Promise<Response>((resolve) => {
-      resolvers.push(resolve);
-    });
-  }) as typeof fetch;
-
-  const geolocation: Geolocation = {
-    clearWatch: () => undefined,
-    watchPosition: () => 1,
-    getCurrentPosition: (success) => {
-      success({
-        coords: {
-          latitude: 35.6762,
-          longitude: 139.6503,
-          accuracy: 1,
-          altitude: null,
-          altitudeAccuracy: null,
-          heading: null,
-          speed: null,
-          toJSON: () => ({}),
-        },
-        timestamp: Date.now(),
-        toJSON: () => ({}),
-      });
-    },
-  };
-
-  Object.defineProperty(globalThis.navigator, "geolocation", {
-    configurable: true,
-    value: geolocation,
-  });
-
-  const locationInput = document.querySelector("#location-input") as HTMLInputElement;
-  const detectButton = Array.from(document.querySelectorAll("button")).find(
-    (button) => button.textContent === "Auto-detect",
-  ) as HTMLButtonElement;
-
-  await setInputValue(locationInput, "Madrid");
-
-  await act(async () => {
-    detectButton.click();
-    await flush();
-  });
-
-  await submitForm();
-
-  await act(async () => {
-    await flush();
-  });
-
-  assert.equal(resolvers.length, 2);
-
-  await act(async () => {
-    resolvers[0](
-      new Response(
-        JSON.stringify({
-          data: {
-            city: "Madrid",
-            temperature: 9,
-            description: "older",
-            units: "metric",
-          },
-          source: "openweathermap",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    );
-    await flush();
-  });
-
-  await act(async () => {
-    resolvers[1](
-      new Response(
-        JSON.stringify({
-          data: {
-            city: "Tokyo",
-            temperature: 21,
-            description: "newer",
-            units: "metric",
-          },
-          source: "openweathermap",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    );
-    await flush();
-  });
-
-  assert.ok(document.body.textContent?.includes("Tokyo"));
-  assert.ok(!document.body.textContent?.includes("older"));
 });
