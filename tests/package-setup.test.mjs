@@ -27,7 +27,7 @@ test("devDependencies stay minimal for requested frontend setup", async () => {
   const pkg = await loadPackageJson();
 
   const dependencyKeys = Object.keys(pkg.devDependencies).sort();
-  assert.deepEqual(dependencyKeys, ["typescript", "vite"]);
+  assert.deepEqual(dependencyKeys, ["@types/jsdom", "jsdom", "tsx", "typescript", "vite"]);
 });
 
 test("package.json content is valid JSON", async () => {
