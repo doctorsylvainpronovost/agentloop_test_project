@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from pydantic import BaseModel
@@ -14,6 +14,12 @@ from backend.config import WeatherConfigError, load_weather_settings
 from backend.weather_client import WeatherClient, WeatherServiceError
 
 app = FastAPI(title="Weather App API", version="0.1.0")
+
+RANGE_TO_DAYS = {
+    "day": 1,
+    "3day": 3,
+    "week": 7,
+}
 
 
 class ErrorDetail(BaseModel):
@@ -60,22 +66,23 @@ def _error(status_code: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status_code, detail={"code": code, "message": message})
 
 
-def _validate_non_empty(value: str, field: str) -> str:
-    normalized = value.strip()
+def _validate_required_query(value: Optional[str], *, field_name: str) -> str:
+    normalized = (value or "").strip()
     if not normalized:
-        raise _error(422, f"invalid_{field}", f"{field} must not be empty")
+        raise _error(
+            422,
+            f"invalid_{field_name}",
+            f"{field_name} query parameter is required and must not be empty",
+        )
     return normalized
 
 
 def _validate_range(range_value: str) -> str:
-    normalized = _validate_non_empty(range_value, "range")
-    if normalized != "day":
-        raise _error(422, "invalid_range", "range must be 'day'")
+    normalized = range_value.strip().lower()
+    if normalized not in RANGE_TO_DAYS:
+        allowed = ", ".join(RANGE_TO_DAYS.keys())
+        raise _error(422, "invalid_range", f"range must be one of: {allowed}")
     return normalized
-
-
-def _validate_location(location: str) -> str:
-    return _validate_non_empty(location, "location")
 
 
 def _map_weather_error(exc: WeatherServiceError) -> HTTPException:
@@ -88,56 +95,53 @@ def _map_weather_error(exc: WeatherServiceError) -> HTTPException:
     return _error(502, "upstream_failure", "Unable to fetch weather data")
 
 
-def _to_canonical_response(forecast: dict[str, Any]) -> CanonicalWeatherResponse:
-    location = forecast.get("location") if isinstance(forecast, dict) else None
-    forecast_days = forecast.get("forecast") if isinstance(forecast, dict) else None
+def _normalize_day_payload(forecast_payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    location = forecast_payload.get("location")
+    forecast = forecast_payload.get("forecast")
 
-    if not isinstance(location, dict) or not isinstance(forecast_days, list) or not forecast_days:
-        raise _error(502, "upstream_malformed_response", "Weather provider returned invalid data")
+    if not isinstance(location, dict) or not isinstance(forecast, list) or not forecast:
+        raise _map_weather_error(WeatherServiceError("Malformed weather API response", kind="malformed_response"))
 
-    day0 = forecast_days[0]
-    if not isinstance(day0, dict):
-        raise _error(502, "upstream_malformed_response", "Weather provider returned invalid data")
+    day = forecast[0] if isinstance(forecast[0], dict) else {}
+    temperature = day.get("temperature", {}) if isinstance(day.get("temperature"), dict) else {}
+    condition = day.get("condition", {}) if isinstance(day.get("condition"), dict) else {}
 
-    temperature_payload = day0.get("temperature")
-    condition_payload = day0.get("condition")
-    if not isinstance(temperature_payload, dict) or not isinstance(condition_payload, dict):
-        raise _error(502, "upstream_malformed_response", "Weather provider returned invalid data")
+    average_temperature = temperature.get("avg")
+    if average_temperature is None:
+        average_temperature = temperature.get("max")
+    if average_temperature is None:
+        average_temperature = temperature.get("min")
 
-    city = location.get("name")
-    avg_temperature = temperature_payload.get("avg")
-    description = condition_payload.get("text")
-
-    if not isinstance(city, str) or not city.strip() or not isinstance(description, str) or not description.strip():
-        raise _error(502, "upstream_malformed_response", "Weather provider returned invalid data")
-    if not isinstance(avg_temperature, (int, float)):
-        raise _error(502, "upstream_malformed_response", "Weather provider returned invalid data")
-
-    return CanonicalWeatherResponse(
-        data=CanonicalWeatherData(
-            city=city,
-            temperature=float(avg_temperature),
-            description=description,
-        )
-    )
+    return {
+        "data": {
+            "city": location.get("name"),
+            "temperature": average_temperature,
+            "description": condition.get("text"),
+        }
+    }
 
 
-async def _fetch_forecast(days: int, location: str, units: str, weather_client: WeatherClient) -> dict[str, Any]:
+async def _fetch_weather_forecast(
+    *,
+    city: Optional[str],
+    range_value: str,
+    units: str,
+    weather_client: WeatherClient,
+    city_field_name: str,
+) -> Tuple[str, dict[str, Any]]:
+    validated_city = _validate_required_query(city, field_name=city_field_name)
+    validated_range = _validate_range(range_value)
+
     try:
-        return await weather_client.fetch_forecast(location=location, days=days, units=units)
+        data = await weather_client.fetch_forecast(
+            location=validated_city,
+            days=RANGE_TO_DAYS[validated_range],
+            units=units,
+        )
     except WeatherServiceError as exc:
         raise _map_weather_error(exc) from exc
 
-
-async def _legacy_forecast_response(
-    days: int,
-    location: str,
-    units: str,
-    weather_client: WeatherClient,
-) -> dict[str, object]:
-    validated_location = _validate_location(location)
-    data = await _fetch_forecast(days=days, location=validated_location, units=units, weather_client=weather_client)
-    return {"data": data, "source": "weatherapi"}
+    return validated_range, data
 
 
 @app.get("/")
@@ -150,43 +154,47 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get(
-    "/api/weather",
-    response_model=CanonicalWeatherResponse,
-    responses={
-        400: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-        502: {"model": ErrorResponse},
-        504: {"model": ErrorResponse},
-    },
-)
+@app.get("/api/weather")
 async def weather(
     city: Optional[str] = Query(None),
-    range: Optional[str] = Query(None),
+    range: str = Query("day"),
+    units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
-) -> CanonicalWeatherResponse:
-    if city is None:
-        raise _error(400, "missing_city", "city query parameter is required")
-    if range is None:
-        raise _error(400, "missing_range", "range query parameter is required")
+) -> dict[str, Any]:
+    validated_range, forecast_payload = await _fetch_weather_forecast(
+        city=city,
+        range_value=range,
+        units=units,
+        weather_client=weather_client,
+        city_field_name="city",
+    )
 
-    _validate_range(range)
-    validated_city = _validate_non_empty(city, "city")
-    forecast = await _fetch_forecast(days=1, location=validated_city, units="metric", weather_client=weather_client)
-    return _to_canonical_response(forecast)
+    if validated_range == "day":
+        return _normalize_day_payload(forecast_payload)
+
+    return {"data": forecast_payload, "source": "weatherapi"}
 
 
 @app.get("/api/weather/day")
 async def weather_day(
     response: Response,
-    location: str = Query(..., min_length=1),
+    location: Optional[str] = Query(None),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
-) -> dict[str, object]:
+) -> dict[str, Any]:
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "Wed, 31 Dec 2026 23:59:59 GMT"
     response.headers["Link"] = '</api/weather?city={city}&range=day>; rel="successor-version"'
-    return await _legacy_forecast_response(days=1, location=location, units=units, weather_client=weather_client)
+
+    _, forecast_payload = await _fetch_weather_forecast(
+        city=location,
+        range_value="day",
+        units=units,
+        weather_client=weather_client,
+        city_field_name="location",
+    )
+
+    return {"data": forecast_payload, "source": "weatherapi"}
 
 
 @app.get("/api/weather/3day")
@@ -195,7 +203,14 @@ async def weather_three_day(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, object]:
-    return await _legacy_forecast_response(days=3, location=location, units=units, weather_client=weather_client)
+    _, forecast_payload = await _fetch_weather_forecast(
+        city=location,
+        range_value="3day",
+        units=units,
+        weather_client=weather_client,
+        city_field_name="location",
+    )
+    return {"data": forecast_payload, "source": "weatherapi"}
 
 
 @app.get("/api/weather/week")
@@ -204,7 +219,14 @@ async def weather_week(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, object]:
-    return await _legacy_forecast_response(days=7, location=location, units=units, weather_client=weather_client)
+    _, forecast_payload = await _fetch_weather_forecast(
+        city=location,
+        range_value="week",
+        units=units,
+        weather_client=weather_client,
+        city_field_name="location",
+    )
+    return {"data": forecast_payload, "source": "weatherapi"}
 
 
 if __name__ == "__main__":
