@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildForecastRequest,
   fetchForecast,
+  ForecastApiError,
   formatCoordinateLabel,
   getCurrentCoordinates,
   resolveApiBaseUrl,
@@ -27,128 +28,181 @@ test("resolveApiBaseUrl supports legacy backend env variable names", () => {
   );
 });
 
-test("buildForecastRequest always uses canonical weather endpoint query", () => {
-  const endpoint = buildForecastRequest({ location: " New York " });
+test("buildForecastRequest maps range to normalized backend paths", () => {
+  const dayEndpoint = buildForecastRequest({ location: "Paris", range: "day" });
+  const threeDayEndpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
+  const weekEndpoint = buildForecastRequest({ location: "Paris", range: "week" });
 
-  assert.equal(endpoint, "http://localhost:8000/api/weather?city=New+York&range=day");
+  assert.equal(dayEndpoint, "http://localhost:8000/api/weather/day?location=Paris&units=metric");
+  assert.equal(threeDayEndpoint, "http://localhost:8000/api/weather/3day?location=Paris&units=metric");
+  assert.equal(weekEndpoint, "http://localhost:8000/api/weather/week?location=Paris&units=metric");
 });
 
-test("buildForecastRequest respects configured backend base URL", () => {
-  const endpoint = buildForecastRequest({ location: "Paris" }, { apiBaseUrl: "https://api.example.com/" });
+test("buildForecastRequest includes coordinates when available", () => {
+  const endpoint = buildForecastRequest({
+    location: "48.857, 2.352",
+    range: "day",
+    coordinates: { lat: 48.857, lon: 2.352 },
+  });
 
-  assert.equal(endpoint, "https://api.example.com/api/weather?city=Paris&range=day");
+  assert.equal(
+    endpoint,
+    "http://localhost:8000/api/weather/day?location=48.857%2C+2.352&units=metric&lat=48.857&lon=2.352",
+  );
 });
 
-test("fetchForecast uses GET and canonical endpoint", async () => {
-  const calls: Array<{ input: string; method: string }> = [];
-  const fakeFetch: typeof fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    calls.push({ input: String(input), method: init?.method ?? "GET" });
-
-    return new Response(
-      JSON.stringify({
+test("fetchForecast normalizes both canonical schema and legacy payloads", async () => {
+  const cases = [
+    {
+      name: "canonical normalized response",
+      payload: {
         data: {
-          city: "Paris",
-          temperature: 20,
-          description: "clear sky",
+          location: {
+            name: "Paris",
+          },
+          units: "metric",
+          requested_days: 1,
+          forecast: [
+            {
+              date: "2026-03-05",
+              temperature: { min: 15, max: 21, avg: 18 },
+              condition: { text: "Partly cloudy" },
+            },
+          ],
         },
         source: "weatherapi",
+      },
+      expected: {
+        city: "Paris",
+        temperature: 18,
+        description: "Partly cloudy",
+        units: "metric",
+        source: "weatherapi",
+      },
+    },
+    {
+      name: "legacy response",
+      payload: {
+        data: {
+          city: "Madrid",
+          temperature: 25,
+          description: "Sunny",
+          units: "imperial",
+        },
+        source: "legacy",
+      },
+      expected: {
+        city: "Madrid",
+        temperature: 25,
+        description: "Sunny",
+        units: "imperial",
+        source: "legacy",
+      },
+    },
+  ];
+
+  for (const sample of cases) {
+    const fakeFetch: typeof fetch = async () => {
+      return new Response(JSON.stringify(sample.payload), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+
+    const result = await fetchForecast({ location: sample.expected.city, range: "day" }, fakeFetch);
+    assert.equal(result.weather.city, sample.expected.city, sample.name);
+    assert.equal(result.weather.temperature, sample.expected.temperature, sample.name);
+    assert.equal(result.weather.description, sample.expected.description, sample.name);
+    assert.equal(result.weather.units, sample.expected.units, sample.name);
+    assert.equal(result.source, sample.expected.source, sample.name);
+  }
+});
+
+test("fetchForecast rejects malformed success payloads deterministically", async () => {
+  const malformedPayloads = [
+    { data: null },
+    { data: { location: { name: "Paris" }, forecast: [], units: "metric" } },
+    {
+      data: {
+        location: { name: "Paris" },
+        forecast: [{ temperature: { avg: "warm" }, condition: { text: "clear" } }],
+        units: "metric",
+      },
+    },
+  ];
+
+  for (const payload of malformedPayloads) {
+    const fakeFetch: typeof fetch = async () => {
+      return new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+
+    await assert.rejects(() => fetchForecast({ location: "Paris", range: "day" }, fakeFetch), /malformed forecast data/);
+  }
+});
+
+test("fetchForecast maps validation error arrays to ForecastApiError", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    return new Response(
+      JSON.stringify({
+        detail: [
+          { loc: ["query", "location"], msg: "location must not be empty" },
+          { loc: ["query", "units"], msg: "Input should be metric or imperial" },
+        ],
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      { status: 422, headers: { "Content-Type": "application/json" } },
     );
   };
 
-  const result = await fetchForecast({ location: "Paris" }, fakeFetch, {
-    apiBaseUrl: "http://127.0.0.1:8000",
-  });
-
-  assert.equal(result.ok, true);
-  if (result.ok) {
-    assert.equal(result.data.locationLabel, "Paris");
-    assert.equal(result.data.weather.city, "Paris");
-    assert.equal(result.data.weather.temperature, 20);
-    assert.equal(result.data.weather.description, "clear sky");
-  }
-  assert.deepEqual(calls, [{ input: "http://127.0.0.1:8000/api/weather?city=Paris&range=day", method: "GET" }]);
+  await assert.rejects(
+    () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch),
+    (error: unknown) => {
+      assert.ok(error instanceof ForecastApiError);
+      assert.equal(error.status, 422);
+      assert.deepEqual(error.validationErrors?.fieldErrors.location, ["location must not be empty"]);
+      assert.deepEqual(error.validationErrors?.fieldErrors.units, ["Input should be metric or imperial"]);
+      return true;
+    },
+  );
 });
 
-test("fetchForecast classifies backend 4xx responses as validation errors", async () => {
+test("fetchForecast maps detail object validation errors with fallback message", async () => {
   const fakeFetch: typeof fetch = async () => {
-    return new Response(JSON.stringify({ detail: { code: "invalid_location", message: "location must not be empty" } }), {
-      status: 422,
+    return new Response(
+      JSON.stringify({
+        detail: {
+          errors: {
+            location: ["Location is required"],
+          },
+          non_field_errors: ["Please fix the highlighted fields"],
+        },
+      }),
+      { status: 422, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  await assert.rejects(
+    () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch),
+    (error: unknown) => {
+      assert.ok(error instanceof ForecastApiError);
+      assert.deepEqual(error.validationErrors?.fieldErrors.location, ["Location is required"]);
+      assert.deepEqual(error.validationErrors?.generalErrors, ["Please fix the highlighted fields"]);
+      return true;
+    },
+  );
+});
+
+test("fetchForecast surfaces upstream message for non-validation failures", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    return new Response(JSON.stringify({ detail: { message: "Weather provider timed out" } }), {
+      status: 504,
       headers: { "Content-Type": "application/json" },
     });
   };
 
-  const result = await fetchForecast({ location: "Paris" }, fakeFetch);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.error.kind, "validation");
-    assert.equal(result.error.statusCode, 422);
-    assert.equal(result.error.message, "location must not be empty");
-  }
-});
-
-test("fetchForecast uses fallback validation message when backend response body is unexpected", async () => {
-  const fakeFetch: typeof fetch = async () => {
-    return new Response("{}", {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  };
-
-  const result = await fetchForecast({ location: "Paris" }, fakeFetch);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.error.kind, "validation");
-    assert.equal(result.error.message, "Weather request was invalid. Please verify the city name and try again.");
-  }
-});
-
-test("fetchForecast classifies network failures", async () => {
-  const fakeFetch: typeof fetch = async () => {
-    throw new Error("socket hang up");
-  };
-
-  const result = await fetchForecast({ location: "Paris" }, fakeFetch);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.error.kind, "network");
-    assert.equal(result.error.message, "Network error while fetching weather. Please check your connection and retry.");
-  }
-});
-
-test("fetchForecast classifies malformed success payloads", async () => {
-  const fakeFetch: typeof fetch = async () => {
-    return new Response(JSON.stringify({ data: { city: "Paris" } }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  };
-
-  const result = await fetchForecast({ location: "Paris" }, fakeFetch);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.error.kind, "malformed-payload");
-    assert.equal(result.error.message, "Weather data was malformed. Please try again later.");
-  }
-});
-
-test("fetchForecast rejects empty locations as validation", async () => {
-  const fakeFetch: typeof fetch = async () => {
-    throw new Error("fetch should not run");
-  };
-
-  const result = await fetchForecast({ location: " " }, fakeFetch);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.error.kind, "validation");
-    assert.equal(result.error.message, "Please enter a location before requesting weather.");
-  }
+  await assert.rejects(() => fetchForecast({ location: "Paris", range: "day" }, fakeFetch), /Weather provider timed out/);
 });
 
 test("getCurrentCoordinates resolves when browser geolocation succeeds", async () => {

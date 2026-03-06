@@ -21,13 +21,17 @@ test("package.json defines required Vite + TypeScript toolchain", async () => {
   assert.ok(pkg.devDependencies);
   assert.ok(pkg.devDependencies.vite);
   assert.ok(pkg.devDependencies.typescript);
+  assert.ok(pkg.devDependencies["@types/node"]);
+  assert.ok(pkg.devDependencies.jsdom);
+  assert.ok(pkg.dependencies.react);
+  assert.ok(pkg.dependencies["react-dom"]);
 });
 
-test("devDependencies stay minimal for requested frontend setup", async () => {
+test("frontend test script runs tsx test files before static frontend checks", async () => {
   const pkg = await loadPackageJson();
 
-  const dependencyKeys = Object.keys(pkg.devDependencies).sort();
-  assert.deepEqual(dependencyKeys, ["@types/jsdom", "jsdom", "tsx", "typescript", "vite"]);
+  assert.match(pkg.scripts["test:frontend"], /^tsx --test .*forecast-api\.test\.ts .*app-ui\.test\.tsx/);
+  assert.match(pkg.scripts["test:frontend"], /node --test tests\/frontend-entry\.test\.js tests\/frontend-build\.test\.js/);
 });
 
 test("package.json content is valid JSON", async () => {

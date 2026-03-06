@@ -1,7 +1,9 @@
-export type ForecastRange = "day";
+export type ForecastRange = "day" | "three-day" | "week";
 
 export type ForecastRequest = {
   location: string;
+  range: ForecastRange;
+  coordinates?: { lat: number; lon: number };
 };
 
 type RequestOptions = {
@@ -18,41 +20,68 @@ export type WeatherPayload = {
   city: string;
   temperature: number;
   description: string;
+  units: string;
 };
 
 export type ForecastResponse = {
   locationLabel: string;
+  range: ForecastRange;
   weather: WeatherPayload;
   source: string;
 };
 
-export type WeatherRequestErrorKind = "validation" | "network" | "malformed-payload" | "unknown";
-
-export type WeatherRequestError = {
-  kind: WeatherRequestErrorKind;
-  message: string;
-  statusCode?: number;
+export type ValidationErrors = {
+  fieldErrors: Record<string, string[]>;
+  generalErrors: string[];
 };
 
-export type ForecastResult =
-  | {
-      ok: true;
-      data: ForecastResponse;
-    }
-  | {
-      ok: false;
-      error: WeatherRequestError;
-    };
+type LegacyForecastData = {
+  city?: unknown;
+  temperature?: unknown;
+  description?: unknown;
+  units?: unknown;
+};
+
+type ForecastBody = {
+  data?: unknown;
+  source?: unknown;
+};
+
+type FastApiValidationIssue = {
+  loc?: unknown;
+  msg?: unknown;
+  message?: unknown;
+};
 
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
 const TIMEOUT = 3;
+const DEFAULT_API_BASE_URL = "http://localhost:8000";
+
+const RANGE_ENDPOINT: Record<ForecastRange, string> = {
+  day: "day",
+  "three-day": "3day",
+  week: "week",
+};
 
 export const rangeLabels: Record<ForecastRange, string> = {
   day: "Today",
+  "three-day": "Next 3 Days",
+  week: "Full Week",
 };
 
-const DEFAULT_API_BASE_URL = "http://localhost:8000";
+export class ForecastApiError extends Error {
+  readonly status: number;
+
+  readonly validationErrors: ValidationErrors | null;
+
+  constructor(message: string, status: number, validationErrors: ValidationErrors | null = null) {
+    super(message);
+    this.name = "ForecastApiError";
+    this.status = status;
+    this.validationErrors = validationErrors;
+  }
+}
 
 const readFrontendEnv = (): FrontendEnv => {
   const importMeta = import.meta as ImportMeta & {
@@ -60,6 +89,215 @@ const readFrontendEnv = (): FrontendEnv => {
   };
 
   return importMeta.env ?? {};
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+const asText = (value: unknown): string | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+const asNumber = (value: unknown): number | null => {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+};
+
+const parseFastApiValidationIssues = (detail: unknown): ValidationErrors => {
+  const fieldErrors: Record<string, string[]> = {};
+  const generalErrors: string[] = [];
+
+  if (typeof detail === "string") {
+    return { fieldErrors, generalErrors: [detail] };
+  }
+
+  if (Array.isArray(detail)) {
+    for (const issue of detail) {
+      const typedIssue = isRecord(issue) ? (issue as FastApiValidationIssue) : null;
+      const message = asText(typedIssue?.msg) ?? asText(typedIssue?.message);
+
+      if (!message) {
+        continue;
+      }
+
+      const location = Array.isArray(typedIssue?.loc) ? typedIssue.loc : [];
+      const segments = location.map((segment) => (typeof segment === "string" ? segment : null)).filter(Boolean) as string[];
+      const field = segments.length > 1 && ["query", "path", "body", "header", "cookie"].includes(segments[0])
+        ? segments[1]
+        : segments[segments.length - 1];
+
+      if (field && field !== "__root__") {
+        if (!fieldErrors[field]) {
+          fieldErrors[field] = [];
+        }
+        fieldErrors[field].push(message);
+        continue;
+      }
+
+      generalErrors.push(message);
+    }
+
+    return { fieldErrors, generalErrors };
+  }
+
+  if (!isRecord(detail)) {
+    return { fieldErrors, generalErrors };
+  }
+
+  const nestedErrors = isRecord(detail.errors) ? detail.errors : null;
+  if (nestedErrors) {
+    for (const [field, messages] of Object.entries(nestedErrors)) {
+      if (Array.isArray(messages)) {
+        const normalized = messages.map(asText).filter((item): item is string => item !== null);
+        if (normalized.length > 0) {
+          fieldErrors[field] = normalized;
+        }
+      } else {
+        const singleMessage = asText(messages);
+        if (singleMessage) {
+          fieldErrors[field] = [singleMessage];
+        }
+      }
+    }
+  }
+
+  const topLevelMessage = asText(detail.message);
+  if (topLevelMessage) {
+    generalErrors.push(topLevelMessage);
+  }
+
+  const nonFieldErrors = detail.non_field_errors;
+  if (Array.isArray(nonFieldErrors)) {
+    for (const message of nonFieldErrors) {
+      const normalized = asText(message);
+      if (normalized) {
+        generalErrors.push(normalized);
+      }
+    }
+  }
+
+  return { fieldErrors, generalErrors };
+};
+
+const toValidationError = (body: unknown): ValidationErrors => {
+  if (!isRecord(body)) {
+    return {
+      fieldErrors: {},
+      generalErrors: ["Request validation failed. Please review your input and try again."],
+    };
+  }
+
+  const detail = body.detail;
+  const parsed = parseFastApiValidationIssues(detail);
+  const hasFieldErrors = Object.keys(parsed.fieldErrors).length > 0;
+
+  if (hasFieldErrors || parsed.generalErrors.length > 0) {
+    return parsed;
+  }
+
+  const fallback = asText(body.message) ?? asText(body.error);
+  return {
+    fieldErrors: {},
+    generalErrors: [fallback ?? "Request validation failed. Please review your input and try again."],
+  };
+};
+
+const parseFailure = (status: number, body: unknown): ForecastApiError => {
+  if (status === 422) {
+    const validationErrors = toValidationError(body);
+    const message = validationErrors.generalErrors[0] ?? "Request validation failed.";
+    return new ForecastApiError(message, status, validationErrors);
+  }
+
+  if (isRecord(body)) {
+    const detail = body.detail;
+
+    if (typeof detail === "string") {
+      return new ForecastApiError(detail, status);
+    }
+
+    if (isRecord(detail)) {
+      const message = asText(detail.message);
+      if (message) {
+        return new ForecastApiError(message, status);
+      }
+    }
+
+    const message = asText(body.message);
+    if (message) {
+      return new ForecastApiError(message, status);
+    }
+  }
+
+  return new ForecastApiError("Unable to fetch forecast.", status);
+};
+
+const parseLegacyWeather = (data: unknown): WeatherPayload | null => {
+  const body = isRecord(data) ? (data as LegacyForecastData) : null;
+  if (!body) {
+    return null;
+  }
+
+  const city = asText(body.city);
+  const description = asText(body.description);
+  const temperature = asNumber(body.temperature);
+  const units = asText(body.units) ?? "metric";
+
+  if (!city || !description || temperature === null) {
+    return null;
+  }
+
+  return {
+    city,
+    description,
+    temperature,
+    units,
+  };
+};
+
+const parseNormalizedWeather = (data: unknown): WeatherPayload | null => {
+  if (!isRecord(data)) {
+    return null;
+  }
+
+  const location = isRecord(data.location) ? data.location : null;
+  const city = asText(location?.name);
+  const forecast = Array.isArray(data.forecast) ? data.forecast : null;
+  const firstDay = forecast && forecast.length > 0 && isRecord(forecast[0]) ? forecast[0] : null;
+  const temperatures = isRecord(firstDay?.temperature) ? firstDay.temperature : null;
+  const condition = isRecord(firstDay?.condition) ? firstDay.condition : null;
+
+  const temperature = asNumber(temperatures?.avg) ?? asNumber(temperatures?.max) ?? asNumber(temperatures?.min);
+  const description = asText(condition?.text);
+  const units = asText(data.units) ?? "metric";
+
+  if (!city || !description || temperature === null) {
+    return null;
+  }
+
+  return {
+    city,
+    description,
+    temperature,
+    units,
+  };
+};
+
+const parseSuccessBody = (body: ForecastBody): { weather: WeatherPayload; source: string } => {
+  const weather = parseNormalizedWeather(body.data) ?? parseLegacyWeather(body.data);
+  if (!weather) {
+    throw new Error("Received malformed forecast data.");
+  }
+
+  return {
+    weather,
+    source: asText(body.source) ?? "unknown",
+  };
 };
 
 export const resolveApiBaseUrl = (configuredBaseUrl?: string, env: FrontendEnv = readFrontendEnv()): string => {
@@ -78,17 +316,29 @@ export const resolveApiBaseUrl = (configuredBaseUrl?: string, env: FrontendEnv =
   return parsedUrl.toString().replace(/\/$/, "");
 };
 
-export const buildForecastRequest = ({ location }: ForecastRequest, options: RequestOptions = {}): string => {
+export const buildForecastRequest = (
+  { location, range, coordinates }: ForecastRequest,
+  options: RequestOptions = {},
+): string => {
   const normalizedLocation = location.trim();
 
   if (!normalizedLocation) {
-    throw new Error("Please enter a location before requesting weather.");
+    throw new Error("Please enter a location before requesting a forecast.");
   }
 
-  const params = new URLSearchParams({ city: normalizedLocation, range: "day" });
+  const params = new URLSearchParams({
+    location: normalizedLocation,
+    units: "metric",
+  });
+
+  if (coordinates) {
+    params.set("lat", String(coordinates.lat));
+    params.set("lon", String(coordinates.lon));
+  }
+
   const baseUrl = resolveApiBaseUrl(options.apiBaseUrl);
 
-  return `${baseUrl}/api/weather?${params.toString()}`;
+  return `${baseUrl}/api/weather/${RANGE_ENDPOINT[range]}?${params.toString()}`;
 };
 
 const describeGeolocationError = (error: GeolocationPositionError): string => {
@@ -107,170 +357,33 @@ const describeGeolocationError = (error: GeolocationPositionError): string => {
   return "Location detection failed. Please enter a city manually.";
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
-const toWeatherRequestError = (
-  kind: WeatherRequestErrorKind,
-  fallbackMessage: string,
-  statusCode?: number,
-  overrideMessage?: string,
-): WeatherRequestError => {
-  const normalizedMessage = overrideMessage?.trim();
-
-  return {
-    kind,
-    statusCode,
-    message: normalizedMessage || fallbackMessage,
-  };
-};
-
-const parseValidationMessage = (body: unknown): string | null => {
-  if (!isRecord(body)) {
-    return null;
-  }
-
-  const detail = body.detail;
-
-  if (typeof detail === "string" && detail.trim()) {
-    return detail.trim();
-  }
-
-  if (isRecord(detail) && typeof detail.message === "string" && detail.message.trim()) {
-    return detail.message.trim();
-  }
-
-  if (Array.isArray(detail) && detail.length > 0) {
-    const first = detail[0];
-    if (isRecord(first) && typeof first.msg === "string" && first.msg.trim()) {
-      return first.msg.trim();
-    }
-  }
-
-  if (typeof body.message === "string" && body.message.trim()) {
-    return body.message.trim();
-  }
-
-  return null;
-};
-
-const parseResponseBody = async (response: Response): Promise<unknown> => {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-};
-
-const parseForecastBody = (body: unknown): { weather: WeatherPayload; source: string } | null => {
-  if (!isRecord(body) || !isRecord(body.data)) {
-    return null;
-  }
-
-  const city = body.data.city;
-  const temperature = body.data.temperature;
-  const description = body.data.description;
-  const source = typeof body.source === "string" && body.source.trim() ? body.source.trim() : "unknown";
-
-  if (typeof city !== "string" || !city.trim()) {
-    return null;
-  }
-
-  if (typeof temperature !== "number" || Number.isNaN(temperature)) {
-    return null;
-  }
-
-  if (typeof description !== "string" || !description.trim()) {
-    return null;
-  }
-
-  return {
-    weather: {
-      city: city.trim(),
-      temperature,
-      description: description.trim(),
-    },
-    source,
-  };
-};
-
 export const fetchForecast = async (
   request: ForecastRequest,
   fetchImpl: typeof fetch = fetch,
   options: RequestOptions = {},
-): Promise<ForecastResult> => {
-  let endpoint: string;
-  try {
-    endpoint = buildForecastRequest(request, options);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : undefined;
-    return {
-      ok: false,
-      error: toWeatherRequestError("validation", "Please enter a location before requesting weather.", 422, message),
-    };
-  }
-
-  let response: Response;
-  try {
-    response = await fetchImpl(endpoint, { method: "GET" });
-  } catch {
-    return {
-      ok: false,
-      error: toWeatherRequestError(
-        "network",
-        "Network error while fetching weather. Please check your connection and retry.",
-      ),
-    };
-  }
+): Promise<ForecastResponse> => {
+  const endpoint = buildForecastRequest(request, options);
+  const response = await fetchImpl(endpoint);
 
   if (!response.ok) {
-    const errorBody = await parseResponseBody(response);
-
-    if (response.status >= 400 && response.status < 500) {
-      return {
-        ok: false,
-        error: toWeatherRequestError(
-          "validation",
-          "Weather request was invalid. Please verify the city name and try again.",
-          response.status,
-          parseValidationMessage(errorBody) ?? undefined,
-        ),
-      };
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
     }
 
-    return {
-      ok: false,
-      error: toWeatherRequestError(
-        "unknown",
-        "Unable to fetch weather right now. Please try again shortly.",
-        response.status,
-        parseValidationMessage(errorBody) ?? undefined,
-      ),
-    };
+    throw parseFailure(response.status, body);
   }
 
-  const body = await parseResponseBody(response);
-  const parsed = parseForecastBody(body);
-
-  if (!parsed) {
-    return {
-      ok: false,
-      error: toWeatherRequestError(
-        "malformed-payload",
-        "Weather data was malformed. Please try again later.",
-        response.status,
-      ),
-    };
-  }
+  const body = (await response.json()) as ForecastBody;
+  const parsed = parseSuccessBody(body);
 
   return {
-    ok: true,
-    data: {
-      locationLabel: request.location.trim(),
-      weather: parsed.weather,
-      source: parsed.source,
-    },
+    locationLabel: request.location,
+    range: request.range,
+    weather: parsed.weather,
+    source: parsed.source,
   };
 };
 
