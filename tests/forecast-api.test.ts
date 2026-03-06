@@ -3,9 +3,15 @@ import test from "node:test";
 
 import {
   buildForecastRequest,
+  CANONICAL_DAY_ENDPOINT,
+  CANONICAL_DAY_QUERY_GUIDANCE,
+  CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE,
   fetchForecast,
   formatCoordinateLabel,
   getCurrentCoordinates,
+  LEGACY_DAY_ENDPOINT,
+  LEGACY_DAY_MIGRATION_GUIDANCE,
+  legacyDayContractNotice,
   resolveApiBaseUrl,
 } from "../src/forecastApi.ts";
 
@@ -44,6 +50,19 @@ test("resolveApiBaseUrl prioritizes VITE_API_BASE_URL over compatibility env var
   });
 
   assert.equal(endpoint, "https://api.example.com");
+});
+
+test("frontend contract constants preserve canonical and migration guidance", () => {
+  assert.equal(CANONICAL_DAY_ENDPOINT, "/api/weather");
+  assert.equal(LEGACY_DAY_ENDPOINT, "/api/weather/day");
+  assert.match(CANONICAL_DAY_QUERY_GUIDANCE, /city and range=day/);
+  assert.match(CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE, /city: string, temperature: number, description: string/);
+  assert.match(LEGACY_DAY_MIGRATION_GUIDANCE, /location -> city/);
+  assert.equal(legacyDayContractNotice.status, "deprecated-but-preserved");
+  assert.equal(legacyDayContractNotice.locationParam, "location");
+  assert.equal(legacyDayContractNotice.canonicalCityParam, "city");
+  assert.equal(legacyDayContractNotice.canonicalRangeValue, "day");
+  assert.match(legacyDayContractNotice.migration, /range=day/);
 });
 
 test("buildForecastRequest routes non-day ranges to legacy endpoints", () => {

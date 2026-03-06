@@ -37,7 +37,7 @@ npm run backend:dev
 - Required query parameters:
   - `city`: non-empty string (trimmed)
   - `range`: must be exactly `day`
-- Success response `200`:
+- Success response `200` (normalized canonical day response):
 
 ```json
 {
@@ -48,6 +48,8 @@ npm run backend:dev
   }
 }
 ```
+
+This canonical day response is the team contract for day forecasts and should be used by all new integrations.
 
 ### Canonical validation and error contract
 
@@ -124,9 +126,9 @@ GET /api/weather?city=%20%20%20&range=day
 }
 ```
 
-### Legacy compatibility endpoint
+### Legacy compatibility endpoint and migration
 
-`GET /api/weather/day?location=London` is preserved for backward compatibility and keeps its legacy payload shape:
+`GET /api/weather/day?location=London` is **deprecated-but-preserved** until the published sunset date. It keeps the legacy payload shape:
 
 ```json
 {
@@ -157,7 +159,14 @@ GET /api/weather?city=%20%20%20&range=day
 }
 ```
 
-The legacy endpoint now includes explicit deprecation metadata:
+Migration guidance for consumers:
+
+1. Preserve existing location selection logic, but map `location -> city` when calling the canonical endpoint.
+2. Replace legacy calls with `GET /api/weather?city=<city>&range=day`.
+3. Update day forecast parsing to the canonical day response (`data.city`, `data.temperature`, `data.description`) instead of `data.location` and `data.forecast[0]`.
+4. Keep fallback handling for legacy payloads only while supporting older deployed clients.
+
+The legacy endpoint includes deprecation metadata:
 
 - `Deprecation: true`
 - `Sunset: Wed, 31 Dec 2026 23:59:59 GMT`

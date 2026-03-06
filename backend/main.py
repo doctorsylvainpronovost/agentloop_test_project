@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -15,10 +15,23 @@ from backend.weather_client import WeatherClient, WeatherServiceError
 
 app = FastAPI(title="Weather App API", version="0.1.0")
 
+CANONICAL_WEATHER_DESCRIPTION = (
+    "Canonical weather contract for day forecasts. "
+    "Clients must send a non-empty city value and range=day. "
+    "If either parameter is missing, this endpoint returns a deterministic 400 error payload."
+)
+
+LEGACY_DAY_DESCRIPTION = (
+    "Legacy day endpoint kept for backward compatibility and marked deprecated. "
+    "Existing consumers may continue to call this route until 2026-12-31. "
+    "Migrate requests by mapping location -> city and calling /api/weather?city=<city>&range=day "
+    "to receive the normalized canonical day response schema."
+)
+
 
 class ErrorDetail(BaseModel):
-    code: str
-    message: str
+    code: str = Field(..., description="Stable machine-readable error code")
+    message: str = Field(..., description="Human-readable error detail")
 
 
 class ErrorResponse(BaseModel):
@@ -26,13 +39,13 @@ class ErrorResponse(BaseModel):
 
 
 class CanonicalWeatherData(BaseModel):
-    city: str
-    temperature: float
-    description: str
+    city: str = Field(..., description="Resolved city name", examples=["London"])
+    temperature: float = Field(..., description="Average day temperature in Celsius", examples=[11.5])
+    description: str = Field(..., description="Text summary of day conditions", examples=["Partly cloudy"])
 
 
 class CanonicalWeatherResponse(BaseModel):
-    data: CanonicalWeatherData
+    data: CanonicalWeatherData = Field(..., description="Normalized canonical day forecast payload")
 
 
 def main() -> int:
@@ -152,17 +165,42 @@ async def health() -> dict[str, str]:
 
 @app.get(
     "/api/weather",
+    summary="Canonical day weather endpoint",
+    description=CANONICAL_WEATHER_DESCRIPTION,
+    response_description="Normalized day weather response payload",
     response_model=CanonicalWeatherResponse,
     responses={
-        400: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-        502: {"model": ErrorResponse},
-        504: {"model": ErrorResponse},
+        200: {
+            "description": "Normalized canonical day weather payload",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "data": {
+                            "city": "London",
+                            "temperature": 11.5,
+                            "description": "Partly cloudy",
+                        }
+                    }
+                }
+            },
+        },
+        400: {"description": "Required query parameter is missing", "model": ErrorResponse},
+        422: {"description": "Query parameter is invalid", "model": ErrorResponse},
+        502: {"description": "Upstream provider failure", "model": ErrorResponse},
+        504: {"description": "Upstream provider timeout", "model": ErrorResponse},
     },
 )
 async def weather(
-    city: Optional[str] = Query(None),
-    range: Optional[str] = Query(None),
+    city: Optional[str] = Query(
+        None,
+        description="Required by contract. Use the city name that replaces legacy location.",
+        examples=["London"],
+    ),
+    range: Optional[str] = Query(
+        None,
+        description="Required by contract. Must be exactly day for the canonical endpoint.",
+        examples=["day"],
+    ),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> CanonicalWeatherResponse:
     if city is None:
@@ -176,10 +214,20 @@ async def weather(
     return _to_canonical_response(forecast)
 
 
-@app.get("/api/weather/day")
+@app.get(
+    "/api/weather/day",
+    summary="Legacy day weather endpoint",
+    description=LEGACY_DAY_DESCRIPTION,
+    response_description="Legacy weather payload wrapped as { data, source }",
+    deprecated=True,
+)
 async def weather_day(
     response: Response,
-    location: str = Query(..., min_length=1),
+    location: str = Query(
+        ...,
+        min_length=1,
+        description="Legacy parameter. Map this location value to canonical city during migration.",
+    ),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, object]:

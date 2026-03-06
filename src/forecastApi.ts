@@ -6,6 +6,32 @@ export type ForecastRequest = {
   coordinates?: { lat: number; lon: number };
 };
 
+export const CANONICAL_DAY_ENDPOINT = "/api/weather";
+export const CANONICAL_DAY_QUERY_GUIDANCE = "Use city and range=day query parameters for canonical day forecasts.";
+export const CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE =
+  "Canonical day responses normalize data to { data: { city: string, temperature: number, description: string } }.";
+export const LEGACY_DAY_ENDPOINT = "/api/weather/day";
+export const LEGACY_DAY_MIGRATION_GUIDANCE =
+  "Legacy /api/weather/day?location=... remains available but is deprecated. Migrate by mapping location -> city and calling /api/weather?city=<city>&range=day.";
+
+export type LegacyContractNotice = {
+  endpoint: typeof LEGACY_DAY_ENDPOINT;
+  status: "deprecated-but-preserved";
+  locationParam: "location";
+  canonicalCityParam: "city";
+  canonicalRangeValue: "day";
+  migration: string;
+};
+
+export const legacyDayContractNotice: LegacyContractNotice = {
+  endpoint: LEGACY_DAY_ENDPOINT,
+  status: "deprecated-but-preserved",
+  locationParam: "location",
+  canonicalCityParam: "city",
+  canonicalRangeValue: "day",
+  migration: LEGACY_DAY_MIGRATION_GUIDANCE,
+};
+
 type RequestOptions = {
   apiBaseUrl?: string;
 };
@@ -40,9 +66,9 @@ type ErrorBody = {
 };
 
 type CanonicalWeatherBody = {
-  city?: string;
-  temperature?: number;
-  description?: string;
+  city: string;
+  temperature: number;
+  description: string;
 };
 
 type LegacyWeatherDay = {
@@ -55,11 +81,11 @@ type LegacyWeatherDay = {
 };
 
 type LegacyWeatherBody = {
-  location?: {
-    name?: string;
+  location: {
+    name: string;
   };
   units?: string;
-  forecast?: LegacyWeatherDay[];
+  forecast: LegacyWeatherDay[];
 };
 
 type ForecastBody = {
@@ -123,7 +149,7 @@ export const buildForecastRequest = (
       params.set("lon", String(coordinates.lon));
     }
 
-    return `${baseUrl}/api/weather?${params.toString()}`;
+    return `${baseUrl}${CANONICAL_DAY_ENDPOINT}?${params.toString()}`;
   }
 
   const legacyPath = range === "three-day" ? "/api/weather/3day" : "/api/weather/week";
