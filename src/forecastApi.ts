@@ -30,12 +30,23 @@ export type ForecastResponse = {
   source: string;
 };
 
+type ErrorDetail = {
+  code?: string;
+  message?: string;
+};
+
 type ErrorBody = {
-  detail?: string;
+  detail?: string | ErrorDetail;
+};
+
+type CanonicalWeatherBody = {
+  city?: string;
+  temperature?: number;
+  description?: string;
 };
 
 type ForecastBody = {
-  data?: WeatherPayload;
+  data?: CanonicalWeatherBody;
   source?: string;
 };
 
@@ -126,8 +137,10 @@ export const fetchForecast = async (
 
     try {
       const errorBody = (await response.json()) as ErrorBody;
-      if (errorBody.detail) {
+      if (typeof errorBody.detail === "string") {
         detail = errorBody.detail;
+      } else if (errorBody.detail?.message) {
+        detail = errorBody.detail.message;
       }
     } catch {
       // ignore parsing errors and fallback to default detail
@@ -145,8 +158,13 @@ export const fetchForecast = async (
   return {
     locationLabel: request.location,
     range: request.range,
-    weather: body.data,
-    source: body.source ?? "unknown",
+    weather: {
+      city: body.data.city,
+      temperature: body.data.temperature,
+      description: body.data.description,
+      units: "metric",
+    },
+    source: body.source ?? "weatherapi",
   };
 };
 

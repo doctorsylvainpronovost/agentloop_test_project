@@ -36,7 +36,6 @@ test("resolveApiBaseUrl prioritizes explicit config over environment", () => {
   assert.equal(endpoint, "https://override.example.com");
 });
 
-
 test("resolveApiBaseUrl prioritizes VITE_API_BASE_URL over compatibility env vars", () => {
   const endpoint = resolveApiBaseUrl(undefined, {
     VITE_API_BASE_URL: "https://api.example.com/",
@@ -86,9 +85,7 @@ test("fetchForecast calls backend endpoint contract with expected method and pat
           city: "Paris",
           temperature: 20,
           description: "clear sky",
-          units: "metric",
         },
-        source: "openweathermap",
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
@@ -101,7 +98,8 @@ test("fetchForecast calls backend endpoint contract with expected method and pat
   assert.equal(result.locationLabel, "Paris");
   assert.equal(result.range, "day");
   assert.equal(result.weather.city, "Paris");
-  assert.equal(result.source, "openweathermap");
+  assert.equal(result.weather.units, "metric");
+  assert.equal(result.source, "weatherapi");
   assert.equal(calls.length, 1);
   assert.equal(calls[0], "http://127.0.0.1:8000/api/weather?city=Paris&range=day");
 });
@@ -117,17 +115,17 @@ test("fetchForecast fails fast on misconfigured backend base URL", async () => {
   );
 });
 
-test("fetchForecast surfaces backend error details", async () => {
+test("fetchForecast surfaces backend error details from canonical error payload", async () => {
   const fakeFetch: typeof fetch = async () => {
-    return new Response(JSON.stringify({ detail: "upstream unavailable" }), {
-      status: 502,
+    return new Response(JSON.stringify({ detail: { code: "missing_city", message: "city query parameter is required" } }), {
+      status: 400,
       headers: { "Content-Type": "application/json" },
     });
   };
 
   await assert.rejects(
     () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch),
-    /upstream unavailable/,
+    /city query parameter is required/,
   );
 });
 
