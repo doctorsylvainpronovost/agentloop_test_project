@@ -14,7 +14,14 @@ class FakeForecastClient:
             "location": {"name": location, "country": "Testland"},
             "units": units,
             "requested_days": days,
-            "forecast": [{"date": f"2026-03-0{i + 1}"} for i in range(days)],
+            "forecast": [
+                {
+                    "date": f"2026-03-0{i + 1}",
+                    "temperature": {"avg": 20 + i},
+                    "condition": {"text": f"Condition {i + 1}"},
+                }
+                for i in range(days)
+            ],
         }
 
 
@@ -29,6 +36,7 @@ class FailingForecastClient:
 class WeatherApiTestCase(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        app.dependency_overrides[get_weather_client] = lambda: FakeForecastClient()
 
     def tearDown(self):
         app.dependency_overrides.clear()
@@ -38,39 +46,79 @@ class WeatherApiTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
-    def test_forecast_endpoints_happy_path(self):
-        app.dependency_overrides[get_weather_client] = lambda: FakeForecastClient()
+    def test_canonical_endpoint_accepts_city_and_range(self):
+        for city, range_value in (("Paris", "day"), ("Tokyo", "three-day"), ("Lima", "week")):
+            with self.subTest(city=city, range_value=range_value):
+                response = self.client.get(
+                    "/api/weather",
+                    params={"city": city, "range": range_value, "units": "metric"},
+                )
 
-        endpoint_days = {
-            "/api/weather/day": 1,
-            "/api/weather/3day": 3,
-            "/api/weather/week": 7,
-        }
-        for endpoint, expected_days in endpoint_days.items():
-            with self.subTest(endpoint=endpoint):
-                response = self.client.get(endpoint, params={"location": "Paris", "units": "metric"})
                 self.assertEqual(response.status_code, 200)
                 body = response.json()
-                self.assertEqual(body["source"], "weatherapi")
-                self.assertEqual(body["data"]["location"]["name"], "Paris")
-                self.assertEqual(body["data"]["requested_days"], expected_days)
-                self.assertEqual(len(body["data"]["forecast"]), expected_days)
+                self.assertEqual(set(body.keys()), {"data"})
+                self.assertEqual(set(body["data"].keys()), {"city", "temperature", "description"})
+                self.assertEqual(body["data"]["city"], city)
+                self.assertIsInstance(body["data"]["temperature"], (int, float))
+                self.assertEqual(body["data"]["description"], "Condition 1")
 
-    def test_forecast_endpoints_require_location(self):
-        app.dependency_overrides[get_weather_client] = lambda: FakeForecastClient()
+    def test_canonical_endpoint_accepts_optional_coordinates(self):
+        response = self.client.get(
+            "/api/weather",
+            params={"city": "Paris", "range": "day", "lat": 48.857, "lon": 2.352},
+        )
 
-        for endpoint in ("/api/weather/day", "/api/weather/3day", "/api/weather/week"):
-            with self.subTest(endpoint=endpoint):
-                response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["city"], "Paris")
+
+    def test_canonical_endpoint_rejects_missing_required_params(self):
+        for params in ({}, {"city": "Paris"}, {"range": "day"}):
+            with self.subTest(params=params):
+                response = self.client.get("/api/weather", params=params)
                 self.assertEqual(response.status_code, 422)
 
-    def test_forecast_endpoints_reject_blank_location(self):
-        app.dependency_overrides[get_weather_client] = lambda: FakeForecastClient()
+    def test_canonical_endpoint_rejects_invalid_range(self):
+        for invalid_range in ("three_day", "monthly", ""):
+            with self.subTest(invalid_range=invalid_range):
+                response = self.client.get("/api/weather", params={"city": "Paris", "range": invalid_range})
+                self.assertEqual(response.status_code, 422)
 
-        response = self.client.get("/api/weather/day", params={"location": "   "})
+    def test_canonical_endpoint_rejects_blank_city(self):
+        response = self.client.get("/api/weather", params={"city": "   ", "range": "day"})
 
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.json()["detail"]["code"], "invalid_location")
+
+    def test_canonical_endpoint_rejects_invalid_coordinate_types(self):
+        response = self.client.get(
+            "/api/weather",
+            params={"city": "Paris", "range": "day", "lat": "north", "lon": 2.352},
+        )
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_legacy_day_endpoint_matches_canonical_payload_for_equivalent_input(self):
+        canonical_response = self.client.get("/api/weather", params={"city": "Paris", "range": "day"})
+        legacy_response = self.client.get("/api/weather/day", params={"city": "Paris"})
+
+        self.assertEqual(canonical_response.status_code, 200)
+        self.assertEqual(legacy_response.status_code, 200)
+        self.assertEqual(legacy_response.json(), canonical_response.json())
+        self.assertEqual(legacy_response.headers.get("deprecation"), "true")
+        self.assertEqual(legacy_response.headers.get("x-deprecated-endpoint"), "/api/weather/day")
+
+    def test_legacy_day_endpoint_accepts_location_alias(self):
+        response = self.client.get("/api/weather/day", params={"location": "Paris"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["city"], "Paris")
+        self.assertEqual(response.headers.get("deprecation"), "true")
+
+    def test_legacy_day_endpoint_requires_city_or_location(self):
+        response = self.client.get("/api/weather/day")
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["detail"]["code"], "missing_city")
 
     def test_forecast_endpoints_map_upstream_errors_consistently(self):
         scenarios = {
@@ -80,11 +128,18 @@ class WeatherApiTestCase(unittest.TestCase):
             "upstream_error": (502, "upstream_failure"),
         }
 
+        request_params = {
+            "/api/weather": {"city": "Paris", "range": "day"},
+            "/api/weather/day": {"city": "Paris"},
+            "/api/weather/3day": {"location": "Paris"},
+            "/api/weather/week": {"location": "Paris"},
+        }
+
         for kind, (status_code, code) in scenarios.items():
             app.dependency_overrides[get_weather_client] = lambda kind=kind: FailingForecastClient(kind)
-            for endpoint in ("/api/weather/day", "/api/weather/3day", "/api/weather/week"):
+            for endpoint, params in request_params.items():
                 with self.subTest(kind=kind, endpoint=endpoint):
-                    response = self.client.get(endpoint, params={"location": "Paris"})
+                    response = self.client.get(endpoint, params=params)
                     self.assertEqual(response.status_code, status_code)
                     self.assertEqual(response.json()["detail"]["code"], code)
 
