@@ -45,8 +45,25 @@ type CanonicalWeatherBody = {
   description?: string;
 };
 
+type LegacyWeatherDay = {
+  temperature?: {
+    avg?: number;
+  };
+  condition?: {
+    text?: string;
+  };
+};
+
+type LegacyWeatherBody = {
+  location?: {
+    name?: string;
+  };
+  units?: string;
+  forecast?: LegacyWeatherDay[];
+};
+
 type ForecastBody = {
-  data?: CanonicalWeatherBody;
+  data?: CanonicalWeatherBody | LegacyWeatherBody;
   source?: string;
 };
 
@@ -96,16 +113,68 @@ export const buildForecastRequest = (
     throw new Error("Please enter a location before requesting a forecast.");
   }
 
-  const params = new URLSearchParams({ city: normalizedLocation, range });
-
-  if (coordinates) {
-    params.set("lat", String(coordinates.lat));
-    params.set("lon", String(coordinates.lon));
-  }
-
   const baseUrl = resolveApiBaseUrl(options.apiBaseUrl);
 
-  return `${baseUrl}/api/weather?${params.toString()}`;
+  if (range === "day") {
+    const params = new URLSearchParams({ city: normalizedLocation, range });
+
+    if (coordinates) {
+      params.set("lat", String(coordinates.lat));
+      params.set("lon", String(coordinates.lon));
+    }
+
+    return `${baseUrl}/api/weather?${params.toString()}`;
+  }
+
+  const legacyPath = range === "three-day" ? "/api/weather/3day" : "/api/weather/week";
+  const params = new URLSearchParams({ location: normalizedLocation, units: "metric" });
+  return `${baseUrl}${legacyPath}?${params.toString()}`;
+};
+
+const isCanonicalWeatherBody = (data: ForecastBody["data"]): data is CanonicalWeatherBody => {
+  return !!data && typeof (data as CanonicalWeatherBody).city === "string" && typeof (data as CanonicalWeatherBody).temperature === "number" && typeof (data as CanonicalWeatherBody).description === "string";
+};
+
+const isLegacyWeatherBody = (data: ForecastBody["data"]): data is LegacyWeatherBody => {
+  return !!data && typeof (data as LegacyWeatherBody).location?.name === "string" && Array.isArray((data as LegacyWeatherBody).forecast);
+};
+
+const toForecastResponse = (request: ForecastRequest, body: ForecastBody): ForecastResponse => {
+  if (isCanonicalWeatherBody(body.data)) {
+    return {
+      locationLabel: request.location,
+      range: request.range,
+      weather: {
+        city: body.data.city,
+        temperature: body.data.temperature,
+        description: body.data.description,
+        units: "metric",
+      },
+      source: body.source ?? "weatherapi",
+    };
+  }
+
+  if (isLegacyWeatherBody(body.data)) {
+    const firstDay = body.data.forecast[0];
+    const temperature = firstDay?.temperature?.avg;
+    const description = firstDay?.condition?.text;
+
+    if (typeof temperature === "number" && typeof description === "string" && description.length > 0) {
+      return {
+        locationLabel: request.location,
+        range: request.range,
+        weather: {
+          city: body.data.location.name,
+          temperature,
+          description,
+          units: body.data.units ?? "metric",
+        },
+        source: body.source ?? "weatherapi",
+      };
+    }
+  }
+
+  throw new Error("Received malformed forecast data.");
 };
 
 const describeGeolocationError = (error: GeolocationPositionError): string => {
@@ -150,22 +219,7 @@ export const fetchForecast = async (
   }
 
   const body = (await response.json()) as ForecastBody;
-
-  if (!body.data?.city || typeof body.data.temperature !== "number" || !body.data.description) {
-    throw new Error("Received malformed forecast data.");
-  }
-
-  return {
-    locationLabel: request.location,
-    range: request.range,
-    weather: {
-      city: body.data.city,
-      temperature: body.data.temperature,
-      description: body.data.description,
-      units: "metric",
-    },
-    source: body.source ?? "weatherapi",
-  };
+  return toForecastResponse(request, body);
 };
 
 export const getCurrentCoordinates = (

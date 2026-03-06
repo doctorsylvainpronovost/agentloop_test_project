@@ -7,7 +7,7 @@ import {
   formatCoordinateLabel,
   getCurrentCoordinates,
   resolveApiBaseUrl,
-} from "../src/forecastApi";
+} from "../src/forecastApi.ts";
 
 test("resolveApiBaseUrl uses localhost backend when env is missing", () => {
   assert.equal(resolveApiBaseUrl(undefined), "http://localhost:8000");
@@ -46,10 +46,10 @@ test("resolveApiBaseUrl prioritizes VITE_API_BASE_URL over compatibility env var
   assert.equal(endpoint, "https://api.example.com");
 });
 
-test("buildForecastRequest includes backend base URL, location, and selected range", () => {
+test("buildForecastRequest routes non-day ranges to legacy endpoints", () => {
   const endpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
 
-  assert.equal(endpoint, "http://localhost:8000/api/weather?city=Paris&range=three-day");
+  assert.equal(endpoint, "http://localhost:8000/api/weather/3day?location=Paris&units=metric");
 });
 
 test("buildForecastRequest includes coordinates when available", () => {
@@ -102,6 +102,36 @@ test("fetchForecast calls backend endpoint contract with expected method and pat
   assert.equal(result.source, "weatherapi");
   assert.equal(calls.length, 1);
   assert.equal(calls[0], "http://127.0.0.1:8000/api/weather?city=Paris&range=day");
+});
+
+test("fetchForecast supports legacy payload shape for non-day ranges", async () => {
+  const calls: string[] = [];
+  const fakeFetch: typeof fetch = async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+
+    return new Response(
+      JSON.stringify({
+        data: {
+          location: { name: "Paris" },
+          units: "metric",
+          forecast: [{ temperature: { avg: 18 }, condition: { text: "Cloudy" } }],
+        },
+        source: "weatherapi",
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const result = await fetchForecast({ location: "Paris", range: "three-day" }, fakeFetch, {
+    apiBaseUrl: "http://127.0.0.1:8000",
+  });
+
+  assert.equal(result.range, "three-day");
+  assert.equal(result.weather.city, "Paris");
+  assert.equal(result.weather.temperature, 18);
+  assert.equal(result.weather.description, "Cloudy");
+  assert.equal(result.weather.units, "metric");
+  assert.equal(calls[0], "http://127.0.0.1:8000/api/weather/3day?location=Paris&units=metric");
 });
 
 test("fetchForecast fails fast on misconfigured backend base URL", async () => {
