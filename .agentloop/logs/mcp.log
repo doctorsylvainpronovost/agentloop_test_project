@@ -156,3 +156,19 @@
 [2026-03-05T13:50:08.551Z] [mcp-client] Transport error for 'git-worktree-toolbox': JSON Parse error: Unexpected identifier "Git"
 [2026-03-05T13:50:08.554Z] [mcp-client] Connected to 'git-worktree-toolbox'
 [2026-03-05T13:50:08.558Z] [mcp-client] Discovered 10 tool(s) from 'git-worktree-toolbox': list, go, create, changes, archive, clean, doctor, mr, grab, prompt
+[2026-03-06T23:08:48.404Z] [mcp-client] Discovering tools from external MCP server 'git-worktree-toolbox'...
+[2026-03-06T23:08:48.404Z] [mcp-client] Connecting to external MCP server 'git-worktree-toolbox'...
+[2026-03-06T23:08:49.867Z] [mcp-client] Transport error for 'git-worktree-toolbox': JSON Parse error: Unexpected identifier "Git"
+[2026-03-06T23:08:49.871Z] [mcp-client] Connected to 'git-worktree-toolbox'
+[2026-03-06T23:08:49.873Z] [mcp-client] Discovered 10 tool(s) from 'git-worktree-toolbox': list, go, create, changes, archive, clean, doctor, mr, grab, prompt
+[2026-03-06T23:09:17.064Z] [mcp-store] [Discovery] Using most recent daemon socket: /var/folders/yq/msj6vpsn77l_k8grd4mptps00000gn/T/agentloop/orchestrator-47e92418.sock
+[2026-03-06T23:09:17.064Z] [mcp-store] [IPC] Connecting to daemon at /var/folders/yq/msj6vpsn77l_k8grd4mptps00000gn/T/agentloop/orchestrator-47e92418.sock
+[2026-03-06T23:09:17.068Z] [mcp-store] [IPC] Cannot send action (not connected): tasks/commentAdded
+[2026-03-06T23:09:17.069Z] [mcp-store] [IPC] Connected to daemon
+[2026-03-06T23:09:17.069Z] [mcp-store] [IPC] Sent state_subscribe
+[2026-03-06T23:09:17.071Z] [mcp-store] [IPC] Received state_snapshot (18 slices)
+[2026-03-06T23:09:17.568Z] [mcp-store] [IPC] Received state_patch (slices: daemon)
+[2026-03-06T23:09:19.137Z] [mcp-store] [IPC] Received state_patch (slices: daemon)
+[2026-03-06T23:09:20.115Z] [mcp-store] [IPC] Received state_patch (slices: daemon)
+[2026-03-06T23:09:20.820Z] [mcp-store] [IPC] Received state_patch (slices: daemon)
+[2026-03-06T23:09:21.458Z] [mcp-store] [IPC] Received state_patch (slices: session, panels)
