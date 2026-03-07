@@ -1,20 +1,36 @@
 {
   "name": "weather-webapp-scaffold",
-  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
+    "test": "npm run test:frontend && npm run test:backend && node --test tests/package-setup.test.mjs",
+    "test:python": "python3 -m pytest",
+    "test:node": "node --test migration-tooling.test.js",
+    "test:all": "node --test migration-tooling.test.js && python3 -m pytest && npm run test:db:verification",
+    "test:db:verification": "./scripts/verify_db_migration_and_cache_plan.sh",
+    "test:frontend": "tsx --test tests/forecast-api.test.ts tests/app-ui.test.tsx && node --test tests/frontend-entry.test.js tests/frontend-build.test.js",
+    "test:backend": "python3 -m unittest discover -s tests -p test_backend.py",
+    "typecheck": "tsc --noEmit",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
+    "verify:build": "npm run build",
     "backend:dev": "uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000",
-    "backend:start": "uvicorn backend.main:app --host 0.0.0.0 --port 8000",
-    "test": "node --test && python3 -m unittest discover -s tests -p test_backend.py",
-    "test:frontend": "node --test",
-    "test:backend": "python3 -m unittest discover -s tests -p test_backend.py"
+    "backend:start": "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "@types/jsdom": "^28.0.0",
+    "@types/node": "^25.3.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^28.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.4"
+  },
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }
