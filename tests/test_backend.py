@@ -451,6 +451,27 @@ class WeatherCacheIntegrationTestCase(unittest.TestCase):
 
         self.assertEqual(count, 0)
 
+    def test_weather_invalid_city_does_not_call_upstream_or_write_cache(self):
+        upstream_client = CacheAwareForecastClient(
+            payload={
+                "location": {"name": "Madrid", "country": "Testland"},
+                "units": "metric",
+                "requested_days": 1,
+                "forecast": [],
+            }
+        )
+        app.dependency_overrides[get_weather_client] = lambda: upstream_client
+
+        response = self.client.get("/api/weather", params={"city": "   ", "range": "day", "units": "metric"})
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["detail"]["code"], "invalid_city")
+        self.assertEqual(upstream_client.calls, 0)
+        with self.engine.connect() as connection:
+            count = connection.execute(text("SELECT COUNT(*) FROM weather_cache")).scalar_one()
+
+        self.assertEqual(count, 0)
+
 
 class WeatherOpenApiContractTestCase(unittest.TestCase):
     def setUp(self):
