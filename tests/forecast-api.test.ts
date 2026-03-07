@@ -3,10 +3,16 @@ import test from "node:test";
 
 import {
   buildForecastRequest,
+  CANONICAL_DAY_ENDPOINT,
+  CANONICAL_DAY_QUERY_GUIDANCE,
+  CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE,
   fetchForecast,
   ForecastApiError,
   formatCoordinateLabel,
   getCurrentCoordinates,
+  LEGACY_DAY_ENDPOINT,
+  LEGACY_DAY_MIGRATION_GUIDANCE,
+  legacyDayContractNotice,
   resolveApiBaseUrl,
 } from "../src/forecastApi";
 
@@ -33,7 +39,7 @@ test("buildForecastRequest maps range to normalized backend paths", () => {
   const threeDayEndpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
   const weekEndpoint = buildForecastRequest({ location: "Paris", range: "week" });
 
-  assert.equal(dayEndpoint, "http://localhost:8000/api/weather/day?location=Paris&units=metric");
+  assert.equal(dayEndpoint, "http://localhost:8000/api/weather?city=Paris&range=day");
   assert.equal(threeDayEndpoint, "http://localhost:8000/api/weather/3day?location=Paris&units=metric");
   assert.equal(weekEndpoint, "http://localhost:8000/api/weather/week?location=Paris&units=metric");
 });
@@ -47,7 +53,114 @@ test("buildForecastRequest includes coordinates when available", () => {
 
   assert.equal(
     endpoint,
-    "http://localhost:8000/api/weather/day?location=48.857%2C+2.352&units=metric&lat=48.857&lon=2.352",
+    "http://localhost:8000/api/weather?city=48.857%2C+2.352&range=day&lat=48.857&lon=2.352",
+  );
+});
+
+test("frontend contract constants preserve canonical and migration guidance", () => {
+  assert.equal(CANONICAL_DAY_ENDPOINT, "/api/weather");
+  assert.equal(LEGACY_DAY_ENDPOINT, "/api/weather/day");
+  assert.match(CANONICAL_DAY_QUERY_GUIDANCE, /city and range=day/);
+  assert.match(CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE, /city: string, temperature: number, description: string/);
+  assert.match(LEGACY_DAY_MIGRATION_GUIDANCE, /location -> city/);
+  assert.equal(legacyDayContractNotice.status, "deprecated-but-preserved");
+  assert.equal(legacyDayContractNotice.locationParam, "location");
+  assert.equal(legacyDayContractNotice.canonicalCityParam, "city");
+  assert.equal(legacyDayContractNotice.canonicalRangeValue, "day");
+  assert.match(legacyDayContractNotice.migration, /range=day/);
+});
+
+test("buildForecastRequest respects configured backend base URL", () => {
+  const endpoint = buildForecastRequest(
+    { location: "Paris", range: "day" },
+    { apiBaseUrl: "https://api.example.com/" },
+  );
+
+  assert.equal(endpoint, "https://api.example.com/api/weather?city=Paris&range=day");
+});
+
+test("fetchForecast calls backend endpoint contract with expected method and path", async () => {
+  const calls: string[] = [];
+  const fakeFetch: typeof fetch = async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+
+    return new Response(
+      JSON.stringify({
+        data: {
+          city: "Paris",
+          temperature: 20,
+          description: "clear sky",
+        },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const result = await fetchForecast({ location: "Paris", range: "day" }, fakeFetch, {
+    apiBaseUrl: "http://127.0.0.1:8000",
+  });
+
+  assert.equal(result.locationLabel, "Paris");
+  assert.equal(result.range, "day");
+  assert.equal(result.weather.city, "Paris");
+  assert.equal(result.weather.units, "metric");
+  assert.equal(result.source, "weatherapi");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0], "http://127.0.0.1:8000/api/weather?city=Paris&range=day");
+});
+
+test("fetchForecast supports legacy payload shape for non-day ranges", async () => {
+  const calls: string[] = [];
+  const fakeFetch: typeof fetch = async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+
+    return new Response(
+      JSON.stringify({
+        data: {
+          location: { name: "Paris" },
+          units: "metric",
+          forecast: [{ temperature: { avg: 18 }, condition: { text: "Cloudy" } }],
+        },
+        source: "weatherapi",
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const result = await fetchForecast({ location: "Paris", range: "three-day" }, fakeFetch, {
+    apiBaseUrl: "http://127.0.0.1:8000",
+  });
+
+  assert.equal(result.range, "three-day");
+  assert.equal(result.weather.city, "Paris");
+  assert.equal(result.weather.temperature, 18);
+  assert.equal(result.weather.description, "Cloudy");
+  assert.equal(result.weather.units, "metric");
+  assert.equal(calls[0], "http://127.0.0.1:8000/api/weather/3day?location=Paris&units=metric");
+});
+
+test("fetchForecast fails fast on misconfigured backend base URL", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    throw new Error("fetch should not run");
+  };
+
+  await assert.rejects(
+    () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch, { apiBaseUrl: "backend.local" }),
+    /VITE_API_BASE_URL must be an absolute URL/,
+  );
+});
+
+test("fetchForecast surfaces backend error details from canonical error payload", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    return new Response(JSON.stringify({ detail: { code: "missing_city", message: "city query parameter is required" } }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  await assert.rejects(
+    () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch),
+    /city query parameter is required/,
   );
 });
 

@@ -208,6 +208,50 @@ class WeatherApiTestCase(unittest.TestCase):
                     self.assertEqual(response.json()["detail"]["code"], code)
 
 
+class WeatherOpenApiContractTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
+
+    def test_openapi_documents_canonical_day_endpoint_and_response_schema(self):
+        schema = self.client.get("/openapi.json").json()
+        weather_operation = schema["paths"]["/api/weather"]["get"]
+
+        self.assertIn("Canonical weather contract", weather_operation["description"])
+        params = {parameter["name"]: parameter for parameter in weather_operation["parameters"]}
+        self.assertIn("city", params)
+        self.assertIn("range", params)
+        self.assertEqual(params["city"]["required"], False)
+        self.assertEqual(params["range"]["required"], False)
+        self.assertIn("replaces legacy location", params["city"]["description"])
+        self.assertIn("Must be exactly day", params["range"]["description"])
+
+        canonical_example = weather_operation["responses"]["200"]["content"]["application/json"]["example"]
+        self.assertEqual(canonical_example["data"]["city"], "London")
+        self.assertIsInstance(canonical_example["data"]["temperature"], float)
+        self.assertEqual(canonical_example["data"]["description"], "Partly cloudy")
+
+        canonical_data_schema = schema["components"]["schemas"]["CanonicalWeatherData"]
+        self.assertEqual(canonical_data_schema["required"], ["city", "temperature", "description"])
+        self.assertEqual(canonical_data_schema["properties"]["city"]["type"], "string")
+        self.assertEqual(canonical_data_schema["properties"]["temperature"]["type"], "number")
+        self.assertEqual(canonical_data_schema["properties"]["description"]["type"], "string")
+
+    def test_openapi_marks_legacy_day_endpoint_deprecated_with_migration_guidance(self):
+        schema = self.client.get("/openapi.json").json()
+        legacy_operation = schema["paths"]["/api/weather/day"]["get"]
+
+        self.assertEqual(legacy_operation["deprecated"], True)
+        self.assertIn("Legacy day weather endpoint", legacy_operation["summary"])
+        self.assertIn("mapping location -> city", legacy_operation["description"])
+        self.assertIn("range=day", legacy_operation["description"])
+        params = {parameter["name"]: parameter for parameter in legacy_operation["parameters"]}
+        self.assertIn("location", params["location"]["description"])
+        self.assertIn("canonical city", params["location"]["description"])
+
+
 class WeatherContractDocumentationParityTestCase(unittest.TestCase):
     def test_readme_includes_canonical_examples(self):
         readme_path = Path(__file__).resolve().parents[1] / "README.md"
@@ -221,6 +265,9 @@ class WeatherContractDocumentationParityTestCase(unittest.TestCase):
             '"code": "invalid_city"',
             "GET /api/weather/day?location=London",
             "Deprecation: true",
+            "deprecated-but-preserved",
+            "location -> city",
+            "canonical day response",
         ]
 
         for snippet in required_snippets:

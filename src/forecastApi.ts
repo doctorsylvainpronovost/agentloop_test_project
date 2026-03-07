@@ -6,6 +6,32 @@ export type ForecastRequest = {
   coordinates?: { lat: number; lon: number };
 };
 
+export const CANONICAL_DAY_ENDPOINT = "/api/weather";
+export const CANONICAL_DAY_QUERY_GUIDANCE = "Use city and range=day query parameters for canonical day forecasts.";
+export const CANONICAL_DAY_RESPONSE_SCHEMA_GUIDANCE =
+  "Canonical day responses normalize data to { data: { city: string, temperature: number, description: string } }.";
+export const LEGACY_DAY_ENDPOINT = "/api/weather/day";
+export const LEGACY_DAY_MIGRATION_GUIDANCE =
+  "Legacy /api/weather/day?location=... remains available but is deprecated. Migrate by mapping location -> city and calling /api/weather?city=<city>&range=day.";
+
+export type LegacyContractNotice = {
+  endpoint: typeof LEGACY_DAY_ENDPOINT;
+  status: "deprecated-but-preserved";
+  locationParam: "location";
+  canonicalCityParam: "city";
+  canonicalRangeValue: "day";
+  migration: string;
+};
+
+export const legacyDayContractNotice: LegacyContractNotice = {
+  endpoint: LEGACY_DAY_ENDPOINT,
+  status: "deprecated-but-preserved",
+  locationParam: "location",
+  canonicalCityParam: "city",
+  canonicalRangeValue: "day",
+  migration: LEGACY_DAY_MIGRATION_GUIDANCE,
+};
+
 type RequestOptions = {
   apiBaseUrl?: string;
 };
@@ -57,12 +83,6 @@ const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
 const TIMEOUT = 3;
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
-
-const RANGE_ENDPOINT: Record<ForecastRange, string> = {
-  day: "day",
-  "three-day": "3day",
-  week: "week",
-};
 
 export const rangeLabels: Record<ForecastRange, string> = {
   day: "Today",
@@ -296,7 +316,7 @@ const parseSuccessBody = (body: ForecastBody): { weather: WeatherPayload; source
 
   return {
     weather,
-    source: asText(body.source) ?? "unknown",
+    source: asText(body.source) ?? "weatherapi",
   };
 };
 
@@ -326,19 +346,22 @@ export const buildForecastRequest = (
     throw new Error("Please enter a location before requesting a forecast.");
   }
 
-  const params = new URLSearchParams({
-    location: normalizedLocation,
-    units: "metric",
-  });
-
-  if (coordinates) {
-    params.set("lat", String(coordinates.lat));
-    params.set("lon", String(coordinates.lon));
-  }
-
   const baseUrl = resolveApiBaseUrl(options.apiBaseUrl);
 
-  return `${baseUrl}/api/weather/${RANGE_ENDPOINT[range]}?${params.toString()}`;
+  if (range === "day") {
+    const params = new URLSearchParams({ city: normalizedLocation, range });
+
+    if (coordinates) {
+      params.set("lat", String(coordinates.lat));
+      params.set("lon", String(coordinates.lon));
+    }
+
+    return `${baseUrl}${CANONICAL_DAY_ENDPOINT}?${params.toString()}`;
+  }
+
+  const legacyPath = range === "three-day" ? "/api/weather/3day" : "/api/weather/week";
+  const params = new URLSearchParams({ location: normalizedLocation, units: "metric" });
+  return `${baseUrl}${legacyPath}?${params.toString()}`;
 };
 
 const describeGeolocationError = (error: GeolocationPositionError): string => {

@@ -99,7 +99,7 @@ test("renders successful forecast response with unchanged summary fields", async
   await submitForm();
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0], "http://localhost:8000/api/weather/day?location=Berlin&units=metric");
+  assert.equal(calls[0], "http://localhost:8000/api/weather?city=Berlin&range=day");
   assert.ok(document.body.textContent?.includes("Requested for:"));
   assert.ok(document.body.textContent?.includes("Berlin"));
   assert.ok(document.body.textContent?.includes("Temperature:"));
