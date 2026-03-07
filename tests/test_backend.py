@@ -1,12 +1,17 @@
+import json
+import os
+import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
 
 from backend.config import WeatherConfigError, load_weather_settings
-from backend.main import app, get_weather_client
+from backend.main import _cache_coordinates_from_city, app, get_weather_client
 from backend.weather_client import WeatherClient, WeatherServiceError, normalize_forecast_payload
+from sqlalchemy import create_engine, text
 
 
 class FakeForecastClient:
@@ -206,6 +211,179 @@ class WeatherApiTestCase(unittest.TestCase):
                     response = self.client.get(endpoint, params=params)
                     self.assertEqual(response.status_code, status_code)
                     self.assertEqual(response.json()["detail"]["code"], code)
+
+
+class CacheAwareForecastClient:
+    def __init__(self, payload: dict[str, object]):
+        self.payload = payload
+        self.calls = 0
+
+    async def fetch_forecast(self, location: str, days: int, units: str = "metric"):
+        self.calls += 1
+        return self.payload
+
+
+class FailingCacheAwareForecastClient:
+    async def fetch_forecast(self, location: str, days: int, units: str = "metric"):
+        raise WeatherServiceError("upstream failure", kind="timeout")
+
+
+class WeatherCacheIntegrationTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
+        self.temp_db_file = tempfile.NamedTemporaryFile(prefix="weather-cache-", suffix=".db", delete=False)
+        self.temp_db_file.close()
+        self.database_url = f"sqlite+pysqlite:///{self.temp_db_file.name}"
+        os.environ["DATABASE_URL"] = self.database_url
+        self.engine = create_engine(self.database_url, future=True)
+        with self.engine.begin() as connection:
+            connection.execute(
+                text(
+                    "CREATE TABLE weather_cache ("
+                    "id INTEGER PRIMARY KEY, "
+                    "latitude NUMERIC NOT NULL, "
+                    "longitude NUMERIC NOT NULL, "
+                    "units VARCHAR(16) NOT NULL, "
+                    "forecast_range VARCHAR(16) NOT NULL, "
+                    "cache_version INTEGER NOT NULL, "
+                    "payload TEXT NOT NULL, "
+                    "created_at DATETIME NOT NULL, "
+                    "expires_at DATETIME NOT NULL"
+                    ")"
+                )
+            )
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
+        self.engine.dispose()
+        os.environ.pop("DATABASE_URL", None)
+        os.unlink(self.temp_db_file.name)
+
+    def test_weather_cache_hit_returns_contract_without_upstream_call(self):
+        cached_forecast_payload = {
+            "location": {"name": "Paris", "country": "Testland"},
+            "units": "metric",
+            "requested_days": 1,
+            "forecast": [
+                {
+                    "date": "2026-03-01",
+                    "temperature": {"avg": 21.5, "min": 19.2, "max": 23.1},
+                    "condition": {"text": "Sunny", "icon": "//icon.png"},
+                }
+            ],
+        }
+        latitude, longitude = _cache_coordinates_from_city("Paris")
+        now = datetime.utcnow()
+
+        with self.engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO weather_cache "
+                    "(id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                    "VALUES (:id, :latitude, :longitude, :units, :forecast_range, :cache_version, :payload, :created_at, :expires_at)"
+                ),
+                {
+                    "id": 1,
+                    "latitude": str(latitude),
+                    "longitude": str(longitude),
+                    "units": "metric",
+                    "forecast_range": "day",
+                    "cache_version": 1,
+                    "payload": json.dumps(cached_forecast_payload),
+                    "created_at": now - timedelta(minutes=2),
+                    "expires_at": now + timedelta(minutes=20),
+                },
+            )
+
+        upstream_client = CacheAwareForecastClient(payload={})
+        app.dependency_overrides[get_weather_client] = lambda: upstream_client
+
+        response = self.client.get("/api/weather", params={"city": "Paris", "range": "day", "units": "metric"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"data": {"city": "Paris", "temperature": 21.5, "description": "Sunny"}},
+        )
+        self.assertEqual(upstream_client.calls, 0)
+
+    def test_weather_cache_miss_fetches_upstream_and_persists_cache(self):
+        forecast_payload = {
+            "location": {"name": "Berlin", "country": "Testland"},
+            "units": "metric",
+            "requested_days": 1,
+            "forecast": [
+                {
+                    "date": "2026-03-01",
+                    "temperature": {"avg": 11.5, "min": 9.2, "max": 13.1},
+                    "condition": {"text": "Cloudy", "icon": "//icon.png"},
+                }
+            ],
+        }
+        upstream_client = CacheAwareForecastClient(payload=forecast_payload)
+        app.dependency_overrides[get_weather_client] = lambda: upstream_client
+
+        response = self.client.get("/api/weather", params={"city": "Berlin", "range": "day", "units": "metric"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"data": {"city": "Berlin", "temperature": 11.5, "description": "Cloudy"}},
+        )
+        self.assertEqual(upstream_client.calls, 1)
+
+        latitude, longitude = _cache_coordinates_from_city("Berlin")
+        with self.engine.connect() as connection:
+            row = connection.execute(
+                text(
+                    "SELECT units, forecast_range, payload "
+                    "FROM weather_cache "
+                    "WHERE latitude = :latitude AND longitude = :longitude"
+                ),
+                {"latitude": str(latitude), "longitude": str(longitude)},
+            ).mappings().first()
+
+        self.assertIsNotNone(row)
+        assert row is not None
+        self.assertEqual(row["units"], "metric")
+        self.assertEqual(row["forecast_range"], "day")
+        self.assertEqual(json.loads(row["payload"])["location"]["name"], "Berlin")
+
+    def test_weather_cache_miss_then_hit_skips_second_upstream_call(self):
+        forecast_payload = {
+            "location": {"name": "Rome", "country": "Testland"},
+            "units": "metric",
+            "requested_days": 1,
+            "forecast": [
+                {
+                    "date": "2026-03-01",
+                    "temperature": {"avg": 17.0, "min": 14.0, "max": 20.0},
+                    "condition": {"text": "Windy", "icon": "//icon.png"},
+                }
+            ],
+        }
+        upstream_client = CacheAwareForecastClient(payload=forecast_payload)
+        app.dependency_overrides[get_weather_client] = lambda: upstream_client
+
+        first_response = self.client.get("/api/weather", params={"city": "Rome", "range": "day", "units": "metric"})
+        second_response = self.client.get("/api/weather", params={"city": "Rome", "range": "day", "units": "metric"})
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(first_response.json(), second_response.json())
+        self.assertEqual(upstream_client.calls, 1)
+
+    def test_weather_upstream_failure_does_not_write_cache(self):
+        app.dependency_overrides[get_weather_client] = lambda: FailingCacheAwareForecastClient()
+
+        response = self.client.get("/api/weather", params={"city": "Madrid", "range": "day", "units": "metric"})
+
+        self.assertEqual(response.status_code, 504)
+        self.assertEqual(response.json()["detail"]["code"], "upstream_timeout")
+        with self.engine.connect() as connection:
+            count = connection.execute(text("SELECT COUNT(*) FROM weather_cache")).scalar_one()
+
+        self.assertEqual(count, 0)
 
 
 class WeatherOpenApiContractTestCase(unittest.TestCase):

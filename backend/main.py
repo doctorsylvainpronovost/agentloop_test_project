@@ -1,15 +1,23 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import sys
+from datetime import datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from pydantic import BaseModel, Field
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.db.weather_cache import fetch_latest_non_expired_weather_cache
 from backend.config import WeatherConfigError, load_weather_settings
 from backend.weather_client import WeatherClient, WeatherServiceError
 
@@ -20,6 +28,8 @@ RANGE_TO_DAYS = {
     "3day": 3,
     "week": 7,
 }
+CACHE_TTL_MINUTES = 30
+COORDINATE_SCALE = Decimal("0.000001")
 
 CANONICAL_WEATHER_DESCRIPTION = (
     "Canonical weather contract for day forecasts. "
@@ -134,6 +144,132 @@ def _normalize_day_payload(forecast_payload: dict[str, Any]) -> dict[str, dict[s
     }
 
 
+def _cache_coordinates_from_city(city: str) -> Tuple[Decimal, Decimal]:
+    digest = hashlib.sha256(city.encode("utf-8")).digest()
+
+    latitude_bucket = int.from_bytes(digest[:8], "big") % 180000001
+    longitude_bucket = int.from_bytes(digest[8:16], "big") % 360000001
+
+    latitude = (Decimal(latitude_bucket) / Decimal("1000000") - Decimal("90")).quantize(COORDINATE_SCALE)
+    longitude = (Decimal(longitude_bucket) / Decimal("1000000") - Decimal("180")).quantize(COORDINATE_SCALE)
+    return latitude, longitude
+
+
+def _get_cache_database_url() -> Optional[str]:
+    return os.getenv("DATABASE_URL")
+
+
+def _read_cached_forecast(*, city: str, range_value: str, units: str) -> Optional[dict[str, Any]]:
+    database_url = _get_cache_database_url()
+    if not database_url:
+        return None
+
+    latitude, longitude = _cache_coordinates_from_city(city)
+
+    engine_kwargs: dict[str, Any] = {"future": True}
+    if database_url.lower().startswith("postgresql"):
+        engine_kwargs["connect_args"] = {"connect_timeout": 1}
+
+    try:
+        engine = create_engine(database_url, **engine_kwargs)
+        try:
+            with engine.connect() as connection:
+                row = fetch_latest_non_expired_weather_cache(
+                    connection,
+                    latitude=str(latitude),
+                    longitude=str(longitude),
+                    units=units,
+                    forecast_range=range_value,
+                    as_of=datetime.utcnow(),
+                )
+        finally:
+            engine.dispose()
+    except SQLAlchemyError:
+        return None
+
+    if row is None:
+        return None
+
+    payload = row.get("payload")
+    if not isinstance(payload, str):
+        return None
+
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _persist_cached_forecast(*, city: str, range_value: str, units: str, payload: dict[str, Any]) -> None:
+    database_url = _get_cache_database_url()
+    if not database_url:
+        return
+
+    latitude, longitude = _cache_coordinates_from_city(city)
+    latitude_value = str(latitude)
+    longitude_value = str(longitude)
+    now = datetime.utcnow()
+    expires_at = now + timedelta(minutes=CACHE_TTL_MINUTES)
+    serialized_payload = json.dumps(payload)
+
+    engine_kwargs: dict[str, Any] = {"future": True}
+    if database_url.lower().startswith("postgresql"):
+        engine_kwargs["connect_args"] = {"connect_timeout": 1}
+
+    try:
+        engine = create_engine(database_url, **engine_kwargs)
+        try:
+            with engine.begin() as connection:
+                next_id = connection.execute(text("SELECT COALESCE(MAX(id), 0) + 1 FROM weather_cache")).scalar_one()
+                next_version = connection.execute(
+                    text(
+                        "SELECT COALESCE(MAX(cache_version), 0) + 1 "
+                        "FROM weather_cache "
+                        "WHERE latitude = :latitude "
+                        "AND longitude = :longitude "
+                        "AND units = :units "
+                        "AND forecast_range = :forecast_range"
+                    ),
+                    {
+                        "latitude": latitude_value,
+                        "longitude": longitude_value,
+                        "units": units,
+                        "forecast_range": range_value,
+                    },
+                ).scalar_one()
+                connection.execute(
+                    text(
+                        "INSERT INTO weather_cache "
+                        "(id, latitude, longitude, units, forecast_range, cache_version, payload, created_at, expires_at) "
+                        "VALUES "
+                        "(:id, :latitude, :longitude, :units, :forecast_range, :cache_version, :payload, :created_at, :expires_at)"
+                    ),
+                    {
+                        "id": int(next_id),
+                        "latitude": latitude_value,
+                        "longitude": longitude_value,
+                        "units": units,
+                        "forecast_range": range_value,
+                        "cache_version": int(next_version),
+                        "payload": serialized_payload,
+                        "created_at": now,
+                        "expires_at": expires_at,
+                    },
+                )
+        finally:
+            engine.dispose()
+    except SQLAlchemyError:
+        return
+
+
+def _build_weather_response(validated_range: str, forecast_payload: dict[str, Any]) -> dict[str, Any]:
+    if validated_range == "day":
+        return _normalize_day_payload(forecast_payload)
+    return {"data": forecast_payload, "source": "weatherapi"}
+
+
 async def _fetch_weather_forecast(
     *,
     city: Optional[str],
@@ -145,6 +281,10 @@ async def _fetch_weather_forecast(
     validated_city = _validate_required_query(city, field_name=city_field_name)
     validated_range = _validate_range(range_value)
 
+    cached_payload = _read_cached_forecast(city=validated_city, range_value=validated_range, units=units)
+    if cached_payload is not None:
+        return validated_range, cached_payload
+
     try:
         data = await weather_client.fetch_forecast(
             location=validated_city,
@@ -154,6 +294,7 @@ async def _fetch_weather_forecast(
     except WeatherServiceError as exc:
         raise _map_weather_error(exc) from exc
 
+    _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=data)
     return validated_range, data
 
 
@@ -216,10 +357,7 @@ async def weather(
         city_field_name="city",
     )
 
-    if validated_range == "day":
-        return _normalize_day_payload(forecast_payload)
-
-    return {"data": forecast_payload, "source": "weatherapi"}
+    return _build_weather_response(validated_range, forecast_payload)
 
 
 @app.get(
