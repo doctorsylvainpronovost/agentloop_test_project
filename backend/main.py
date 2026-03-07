@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+import os
+import sqlite3
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
@@ -33,6 +37,8 @@ LEGACY_DAY_DESCRIPTION = (
     "Migrate requests by mapping location -> city and calling /api/weather?city=<city>&range=day "
     "to receive the normalized canonical day response schema."
 )
+
+CACHE_TTL_SECONDS = 900
 
 
 class ErrorDetail(BaseModel):
@@ -73,6 +79,93 @@ def get_weather_client() -> WeatherClient:
         ) from exc
 
     return WeatherClient(api_key=settings.api_key, base_url=settings.base_url, timeout=settings.timeout)
+
+
+def _cache_database_path() -> Path:
+    configured = os.getenv("WEATHER_CACHE_DB_PATH", "app.db").strip()
+    if configured:
+        return Path(configured)
+    return Path("app.db")
+
+
+def _cache_connection() -> sqlite3.Connection:
+    db_path = _cache_database_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(db_path)
+    connection.row_factory = sqlite3.Row
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS weather_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            city_key TEXT NOT NULL,
+            forecast_range TEXT NOT NULL,
+            units TEXT NOT NULL,
+            status_code INTEGER NOT NULL,
+            payload TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            UNIQUE(city_key, forecast_range, units)
+        )
+        """
+    )
+    return connection
+
+
+def _cache_lookup(city: str, forecast_range: str, units: str) -> Optional[dict[str, Any]]:
+    now_iso = datetime.now(timezone.utc).isoformat()
+    city_key = city.strip().lower()
+
+    with _cache_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT status_code, payload
+            FROM weather_cache
+            WHERE city_key = ?
+              AND forecast_range = ?
+              AND units = ?
+              AND expires_at > ?
+            LIMIT 1
+            """,
+            (city_key, forecast_range, units, now_iso),
+        ).fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "status_code": int(row["status_code"]),
+        "payload": json.loads(str(row["payload"])),
+    }
+
+
+def _cache_store(city: str, forecast_range: str, units: str, status_code: int, payload: dict[str, Any]) -> None:
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(seconds=CACHE_TTL_SECONDS)
+    city_key = city.strip().lower()
+
+    with _cache_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO weather_cache (city_key, forecast_range, units, status_code, payload, created_at, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(city_key, forecast_range, units)
+            DO UPDATE SET
+                status_code = excluded.status_code,
+                payload = excluded.payload,
+                created_at = excluded.created_at,
+                expires_at = excluded.expires_at
+            """,
+            (
+                city_key,
+                forecast_range,
+                units,
+                status_code,
+                json.dumps(payload),
+                now.isoformat(),
+                expires_at.isoformat(),
+            ),
+        )
+        connection.commit()
 
 
 def _error(status_code: int, code: str, message: str) -> HTTPException:
@@ -208,18 +301,29 @@ async def weather(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, Any]:
-    validated_range, forecast_payload = await _fetch_weather_forecast(
-        city=city,
-        range_value=range,
-        units=units,
-        weather_client=weather_client,
-        city_field_name="city",
-    )
+    validated_city = _validate_required_query(city, field_name="city")
+    validated_range = _validate_range(range)
+
+    cache_hit = _cache_lookup(validated_city, validated_range, units)
+    if cache_hit is not None and cache_hit["status_code"] == 200:
+        return cache_hit["payload"]
+
+    try:
+        forecast_payload = await weather_client.fetch_forecast(
+            location=validated_city,
+            days=RANGE_TO_DAYS[validated_range],
+            units=units,
+        )
+    except WeatherServiceError as exc:
+        raise _map_weather_error(exc) from exc
 
     if validated_range == "day":
-        return _normalize_day_payload(forecast_payload)
+        response_payload = _normalize_day_payload(forecast_payload)
+    else:
+        response_payload = {"data": forecast_payload, "source": "weatherapi"}
 
-    return {"data": forecast_payload, "source": "weatherapi"}
+    _cache_store(validated_city, validated_range, units, 200, response_payload)
+    return response_payload
 
 
 @app.get(
