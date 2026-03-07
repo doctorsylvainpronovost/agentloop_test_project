@@ -1,6 +1,15 @@
+# AgentLoop local state — DO NOT commit
+.agentloop/
+.worktrees/
+
+# LLM/MCP logs
+logs_llm/
+
+# Common runtime/build artifacts
 node_modules/
 dist/
 __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+.DS_Store
