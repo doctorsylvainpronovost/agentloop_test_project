@@ -1,11 +1,13 @@
 import { type FormEvent, useMemo, useRef, useState } from "react";
 import {
   fetchForecast,
+  ForecastApiError,
   formatCoordinateLabel,
   type ForecastRange,
   type ForecastResponse,
   getCurrentCoordinates,
   rangeLabels,
+  type ValidationErrors,
 } from "./forecastApi";
 
 const ranges: ForecastRange[] = ["day", "three-day", "week"];
@@ -25,6 +27,7 @@ const App = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [activeRequestKey, setActiveRequestKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors | null>(null);
   const requestIdRef = useRef(0);
 
   const manualRequestKey = useMemo(() => buildManualRequestKey(location, selectedRange), [location, selectedRange]);
@@ -39,6 +42,7 @@ const App = (): React.JSX.Element => {
     setLoading(true);
     setActiveRequestKey(requestKey);
     setError(null);
+    setValidationErrors(null);
 
     try {
       const data = await fetchForecast({ location: targetLocation, range, coordinates });
@@ -46,13 +50,18 @@ const App = (): React.JSX.Element => {
         return;
       }
       setResult(data);
+      setValidationErrors(null);
     } catch (requestError) {
       if (thisRequestId !== requestIdRef.current) {
         return;
       }
+
       const message = requestError instanceof Error ? requestError.message : "Something went wrong.";
       setResult(null);
       setError(message);
+      if (requestError instanceof ForecastApiError) {
+        setValidationErrors(requestError.validationErrors);
+      }
     } finally {
       if (thisRequestId === requestIdRef.current) {
         setLoading(false);
@@ -69,6 +78,7 @@ const App = (): React.JSX.Element => {
 
     if (!inputValue) {
       setResult(null);
+      setValidationErrors(null);
       setError("Please enter a location before requesting a forecast.");
       return;
     }
@@ -88,6 +98,7 @@ const App = (): React.JSX.Element => {
   const handleDetectLocation = async (): Promise<void> => {
     if (!navigator.geolocation) {
       setResult(null);
+      setValidationErrors(null);
       setError("Geolocation is not supported in this browser.");
       return;
     }
@@ -104,12 +115,15 @@ const App = (): React.JSX.Element => {
     } catch (geolocationError) {
       const message = geolocationError instanceof Error ? geolocationError.message : "Unable to detect location.";
       setResult(null);
+      setValidationErrors(null);
       setError(message);
     }
   };
 
   const submitDisabled = loading && activeRequestKey === manualRequestKey;
   const detectDisabled = loading && activeRequestKey !== null && activeRequestKey.startsWith("geo:");
+  const locationErrors = validationErrors?.fieldErrors.location ?? [];
+  const generalErrors = validationErrors?.generalErrors ?? [];
 
   return (
     <main className="weather-shell">
@@ -132,6 +146,8 @@ const App = (): React.JSX.Element => {
               Auto-detect
             </button>
           </div>
+
+          {locationErrors.length > 0 ? <p className="error">{locationErrors[0]}</p> : null}
 
           <fieldset className="range-options">
             <legend>Forecast range</legend>
@@ -157,7 +173,14 @@ const App = (): React.JSX.Element => {
         </form>
 
         <section aria-live="polite" className="status-panel">
-          {error ? <p className="error">{error}</p> : null}
+          {generalErrors.length > 0 ? (
+            <ul className="error" aria-label="validation errors">
+              {generalErrors.map((message, index) => (
+                <li key={`${message}-${index}`}>{message}</li>
+              ))}
+            </ul>
+          ) : null}
+          {generalErrors.length === 0 && error ? <p className="error">{error}</p> : null}
           {result ? (
             <article className="result">
               <h2>{rangeLabels[result.range]}</h2>
