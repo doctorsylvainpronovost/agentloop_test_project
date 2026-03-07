@@ -1,4 +1,0 @@
-[2026-03-05T12:54:06.923Z] Initialized: orchestrator (mode=proactive, model=openai/gpt-5.3-codex, llmNodes=0, mcpServers=4)
-[2026-03-05T12:54:06.924Z] Started: mode=proactive, tickInterval=500ms
-[2026-03-05T12:54:18.532Z] Initialized: orchestrator (mode=proactive, model=openai/gpt-5.3-codex, llmNodes=0, mcpServers=4)
-[2026-03-05T12:54:18.533Z] Started: mode=proactive, tickInterval=500ms
