@@ -11,7 +11,6 @@ from typing import Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "0001_baseline"
@@ -19,74 +18,124 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+COORDINATE_PRECISION = 9
+COORDINATE_SCALE = 6
+WEATHER_CACHE_UNIQUE_NAME = "uq_weather_cache_lookup_cache_version"
+WEATHER_CACHE_LOOKUP_INDEX_NAME = "ix_weather_cache_lookup_latest_non_expired"
+
 
 def upgrade() -> None:
     op.create_table(
-        "weather_cache",
-        sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
-        sa.Column("lat", sa.Double(), nullable=False),
-        sa.Column("lon", sa.Double(), nullable=False),
-        sa.Column("units", sa.String(length=16), nullable=False),
-        sa.Column("range", sa.String(length=16), nullable=False),
-        sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        "users",
+        sa.Column("id", sa.BigInteger(), primary_key=True, nullable=False),
+        sa.Column("email", sa.String(length=320), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.UniqueConstraint("email", name="uq_users_email"),
+    )
+
+    op.create_table(
+        "saved_locations",
+        sa.Column("id", sa.BigInteger(), primary_key=True, nullable=False),
+        sa.Column("user_id", sa.BigInteger(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
+            "latitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
             nullable=False,
-            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
+            "longitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
             nullable=False,
-            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
-        sa.CheckConstraint("lat BETWEEN -90 AND 90", name="ck_weather_cache_lat_bounds"),
-        sa.CheckConstraint("lon BETWEEN -180 AND 180", name="ck_weather_cache_lon_bounds"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_saved_locations_user_id_users"),
         sa.CheckConstraint(
-            "units IN ('metric', 'imperial')",
-            name="ck_weather_cache_units_valid",
+            "latitude >= -90 AND latitude <= 90",
+            name="ck_saved_locations_latitude_range",
         ),
-        sa.CheckConstraint("range IN ('1d', '3d', '7d')", name="ck_weather_cache_range_valid"),
-        sa.CheckConstraint("expires_at > created_at", name="ck_weather_cache_expires_after_created"),
+        sa.CheckConstraint(
+            "longitude >= -180 AND longitude <= 180",
+            name="ck_saved_locations_longitude_range",
+        ),
+    )
+
+    op.create_table(
+        "weather_cache",
+        sa.Column("id", sa.BigInteger(), primary_key=True, nullable=False),
+        sa.Column(
+            "latitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
+            nullable=False,
+        ),
+        sa.Column(
+            "longitude",
+            sa.Numeric(precision=COORDINATE_PRECISION, scale=COORDINATE_SCALE),
+            nullable=False,
+        ),
+        sa.Column("units", sa.String(length=16), nullable=False),
+        sa.Column("forecast_range", sa.String(length=16), nullable=False),
+        sa.Column("cache_version", sa.Integer(), nullable=False, server_default=sa.text("1")),
+        sa.Column("payload", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.CheckConstraint(
+            "latitude >= -90 AND latitude <= 90",
+            name="ck_weather_cache_latitude_range",
+        ),
+        sa.CheckConstraint(
+            "longitude >= -180 AND longitude <= 180",
+            name="ck_weather_cache_longitude_range",
+        ),
+        sa.CheckConstraint(
+            "cache_version >= 1",
+            name="ck_weather_cache_cache_version_positive",
+        ),
         sa.UniqueConstraint(
-            "lat",
-            "lon",
+            "latitude",
+            "longitude",
             "units",
-            "range",
-            "created_at",
-            name="uq_weather_cache_key_version",
+            "forecast_range",
+            "cache_version",
+            name=WEATHER_CACHE_UNIQUE_NAME,
         ),
     )
 
-    op.execute(
-        """
-        CREATE INDEX ix_weather_cache_lookup_latest
-        ON weather_cache (lat, lon, units, range, created_at DESC, expires_at DESC);
-        """
+    op.create_index("ix_saved_locations_user_id", "saved_locations", ["user_id"])
+    op.create_index("ix_saved_locations_user_id_name", "saved_locations", ["user_id", "name"])
+    op.create_index(
+        WEATHER_CACHE_LOOKUP_INDEX_NAME,
+        "weather_cache",
+        [
+            "latitude",
+            "longitude",
+            "units",
+            "forecast_range",
+            sa.text("expires_at DESC"),
+            sa.text("cache_version DESC"),
+            sa.text("created_at DESC"),
+            sa.text("id DESC"),
+        ],
     )
 
     op.execute(
-        """
-        COMMENT ON TABLE weather_cache IS
-        'Cache versions are grouped by (lat, lon, units, range). Multiple versions are allowed over time; uniqueness is enforced at (key + created_at) so freshness ordering remains deterministic.';
-        """
+        "COMMENT ON TABLE weather_cache IS 'Read-through weather cache keyed by coordinates, units, range, and version.'"
     )
     op.execute(
-        """
-        COMMENT ON CONSTRAINT uq_weather_cache_key_version ON weather_cache IS
-        'Enforces one version per composite key at a given created_at timestamp while preserving historical versions.';
-        """
+        "COMMENT ON COLUMN weather_cache.cache_version IS 'Monotonic version within a coordinate/units/range cache key. Composite unique constraint enforces uniqueness per version.'"
     )
     op.execute(
-        """
-        COMMENT ON INDEX ix_weather_cache_lookup_latest IS
-        'Supports cache reads by equality key filters, then latest-first freshness ordering, with expires_at available for TTL filtering.';
-        """
+        "COMMENT ON COLUMN weather_cache.expires_at IS 'TTL cutoff; only rows with expires_at > query timestamp are considered cache hits.'"
+    )
+    op.execute(
+        "COMMENT ON INDEX ix_weather_cache_lookup_latest_non_expired IS 'Supports latest non-expired cache lookup ordered by expiration, version, and recency.'"
     )
 
 
 def downgrade() -> None:
-    op.execute("DROP INDEX IF EXISTS ix_weather_cache_lookup_latest")
+    op.drop_index(WEATHER_CACHE_LOOKUP_INDEX_NAME, table_name="weather_cache")
+    op.drop_index("ix_saved_locations_user_id_name", table_name="saved_locations")
+    op.drop_index("ix_saved_locations_user_id", table_name="saved_locations")
     op.drop_table("weather_cache")
+    op.drop_table("saved_locations")
+    op.drop_table("users")
