@@ -2317,3 +2317,385 @@ R..."
 [2026-03-05T13:50:09.576Z] [BTMgr] [BehaviorTreeManager] Tree state changed: RUNNING -> FAILED
 [2026-03-05T13:50:10.577Z] [BT] [AgentBTRunner] Iteration 3, tree state: FAILED
 [2026-03-05T13:50:10.578Z] [BT] [AgentBTRunner] Tree completed with state: FAILED after 3 iterations
+[2026-03-06T23:08:49.790Z] [BT] [AgentBTRunner] Initializing for agent type: release
+[2026-03-06T23:08:49.790Z] [BT] [AgentBTRunner] Project path: /Users/sly/GitHub/agentloop_test_project/.worktrees/task-73
+[2026-03-06T23:08:49.790Z] [BT] [AgentBTRunner] Working directory: /Users/sly/GitHub/agentloop_test_project/.worktrees/task-73
+[2026-03-06T23:08:49.790Z] [BT] [AgentBTRunner] CWD: /Users/sly/GitHub/agentloop_test_project/.worktrees/task-73
+[2026-03-06T23:08:49.790Z] [BT] [AgentBTRunner] Loading behavior tree config...
+[2026-03-06T23:08:49.792Z] [BT] [AgentBTRunner] BT config loaded successfully from: builtin
+[2026-03-06T23:08:49.792Z] [BT] [AgentBTRunner] Config path: /Users/sly/GitHub/trygentic/agentloop/templates/agents/release/release.bt.json
+[2026-03-06T23:08:49.792Z] [BT] [AgentBTRunner] Loaded 2 LLM node configs
+[2026-03-06T23:08:49.797Z] [BT] [AgentBTRunner] Registering 2 LLM node handlers
+[2026-03-06T23:08:49.797Z] [BT] [AgentBTRunner] Registering handler for: __LLM_ACTION__GeneratePRContent
+[2026-03-06T23:08:49.798Z] [BT] [AgentBTRunner] Registering handler for: __LLM_ACTION__WritePRComment
+[2026-03-06T23:08:49.798Z] [BTMgr] [BehaviorTreeManager] Loading config: release-continuous-agent-tree
+[2026-03-06T23:08:49.798Z] [BTMgr] [BehaviorTreeManager] Registered 171 actions: getBlackboard, setBlackboard, NoOp, ReportVerification, ReportProgress, SetPhase, CompletePhase, RecordError, ClearError, Sleep, ExecuteTool, SetPhaseAnalysis, SetPhasePlanning, SetPhaseImplementation, SetPhaseTesting, SetPhaseCompletion, SetPhaseApproval, SetPhaseRejection, SetPhaseResolution, SetPhaseVerification, SetPhaseFinalization, SetPhaseRequirements, SetPhaseExecution, SetPhaseInitialization, AnalyzeCodebase, IndexCodeGraph, SearchCode, ReadFile, EditFile, WriteFile...
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] ApplyChanges registered: true
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] Tree definitions count: 1
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] Tree definition (first 500 chars): {"type":"root","child":{"type":"sequence","comment":"Main continuous loop - never exits unless agent is stopped","children":[{"type":"action","call":"WaitForAgentMessage","comment":"Block until a done-column task assignment or a direct release handoff message arrives"},{"type":"action","call":"FetchTaskContext","comment":"Load task details, comments, and engineer/QA feedback"},{"type":"selector","comment":"Main release flow with failure handling","children":[{"type":"sequence","comment":"Main PR
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] Root sequence has 5 children:
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager]   Child 0: type=action, call=WaitForAgentMessage, name=N/A
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager]   Child 1: type=action, call=FetchTaskContext, name=N/A
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager]   Child 2: type=selector, call=N/A, name=N/A
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager]   Child 3: type=action, call=ClearTaskContext, name=N/A
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager]   Child 4: type=action, call=Loop, name=N/A
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] Creating BehaviourTree with definitions:
+[2026-03-06T23:08:49.799Z] [BTMgr] [BehaviorTreeManager] definitions JSON (first 2000 chars): [{"type":"root","child":{"type":"sequence","comment":"Main continuous loop - never exits unless agent is stopped","children":[{"type":"action","call":"WaitForAgentMessage","comment":"Block until a done-column task assignment or a direct release handoff message arrives"},{"type":"action","call":"FetchTaskContext","comment":"Load task details, comments, and engineer/QA feedback"},{"type":"selector","comment":"Main release flow with failure handling","children":[{"type":"sequence","comment":"Main PR creation sequence","children":[{"type":"action","call":"ExtractTaskFiles","comment":"Extract task-specific file list from engineer's completion comment"},{"type":"action","call":"GitDiff","comment":"Get git diff to understand what changed"},{"type":"action","call":"CheckMaestroScreenshots","comment":"Check .agentloop/pr-screenshots/<taskId>/ in the worktree for E2E screenshots"},{"type":"action","call":"CommitScreenshots","comment":"Stage and commit screenshots already in .agentloop/pr-screenshots/ so they are pushed with the branch and embedded as images in the PR"},{"type":"selector","comment":"Check if there are changes to create a PR for, and whether a PR already exists","children":[{"type":"sequence","comment":"No changes detected - pass without PR","children":[{"type":"flip","child":{"type":"condition","call":"HasCodeChanges"}},{"type":"action","call":"AddNoChangesComment"},{"type":"action","call":"ReportTriggerPass"}]},{"type":"sequence","comment":"PR already exists for this branch - skip LLM generation and PR creation","children":[{"type":"action","call":"CheckExistingPR","comment":"Returns SUCCEEDED if open PR found (sets gitPRUrl on blackboard), FAILED if no PR exists"},{"type":"action","call":"AddReleaseComment","comment":"Add comment noting the existing PR URL"},{"type":"action","call":"ReportTriggerPass"}]},{"type":"sequence","comment":"Changes detected, no existing PR - generate PR content and create it","children":[{"type":"action","call":"__LLM_ACTION__Gener
+[2026-03-06T23:08:49.802Z] [BTMgr] [BehaviorTreeManager] Tree created successfully, initial state: READY, isRunning: false
+[2026-03-06T23:08:49.802Z] [BTMgr] [BehaviorTreeManager] Tree structure:
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager] Node: id=bebee3b1-baec-6694-f692-9516bf0f468f, type=root, name=ROOT, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]   Node: id=8f5ab743-37e1-6c2b-0f99-6835240e1c97, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]     Node: id=8e66ee4f-4c9f-becc-7789-e13c3b47c022, type=action, name=WaitForAgentMessage, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]     Node: id=1df36984-cb21-5e84-c340-19e7ff18bd27, type=action, name=FetchTaskContext, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]     Node: id=84971f02-f595-b705-91ad-7fead635defa, type=selector, name=SELECTOR, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]       Node: id=2a2fbb0b-1ab9-325a-c69b-de5257298021, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]         Node: id=07be9e31-274e-ba48-093d-69eadeaf5973, type=action, name=ExtractTaskFiles, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]         Node: id=a60313e3-e175-f4ad-8697-a6829a9d0612, type=action, name=GitDiff, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]         Node: id=e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5, type=action, name=CheckMaestroScreenshots, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]         Node: id=99be96c2-a21f-3235-66cc-5a9a78d1600e, type=action, name=CommitScreenshots, state=READY args=[]
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]         Node: id=dc8768d8-4514-98c5-cee6-aa7f46eaab36, type=selector, name=SELECTOR, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]           Node: id=8e3e92db-f448-47f0-70f0-8556e0c79794, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.803Z] [BTMgr] [BehaviorTreeManager]             Node: id=e269bf93-d6d7-7c85-e27a-0e986e4593d1, type=flip, name=FLIP, state=READY
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]               Node: id=f27484cf-73be-0229-8f96-366b6eca48d8, type=condition, name=HasCodeChanges, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=4adadd48-204c-06b7-c87e-0c9b9394f1b5, type=action, name=AddNoChangesComment, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=57a1b130-df67-3cd5-eb89-51adbfc91ff0, type=action, name=ReportTriggerPass, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]           Node: id=c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=e8b1e9d3-f539-6f0d-8b48-4661663836c9, type=action, name=CheckExistingPR, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=fd41f30b-c9ae-30c5-749b-6b45ceb7a525, type=action, name=AddReleaseComment, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=918df61c-eefe-66db-81cf-b8c59fc46397, type=action, name=ReportTriggerPass, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]           Node: id=bbc73080-cc98-b266-af22-f5f8c550886e, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=9abd2995-b2dc-9c77-7a70-0e1db9be6a53, type=action, name=__LLM_ACTION__GeneratePRContent, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=baac4d1d-3c50-750d-df07-3e5551244191, type=action, name=GitPush, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=49e5e41f-4adc-e9e8-3b16-585a8f348827, type=action, name=GitCreatePR, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=580a40ca-2226-410d-a7e5-b6142294ff08, type=action, name=__LLM_ACTION__WritePRComment, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=69c2d4ec-e25d-f089-42aa-9cebffb61eec, type=action, name=AddReleaseComment, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]             Node: id=eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef, type=action, name=ReportTriggerPass, state=READY args=[]
+[2026-03-06T23:08:49.804Z] [BTMgr] [BehaviorTreeManager]       Node: id=cc7a1caf-c2c5-b20b-f45c-482fd7a38362, type=sequence, name=SEQUENCE, state=READY
+[2026-03-06T23:08:49.805Z] [BTMgr] [BehaviorTreeManager]         Node: id=0674ed02-cd9c-addb-dabd-b861d0ee5880, type=action, name=AddReleaseFailureComment, state=READY args=[]
+[2026-03-06T23:08:49.805Z] [BTMgr] [BehaviorTreeManager]         Node: id=89d44817-b54c-5d67-4304-bd3dcc40aaf3, type=action, name=ReportTriggerPass, state=READY args=[]
+[2026-03-06T23:08:49.805Z] [BTMgr] [BehaviorTreeManager]     Node: id=6a560b2f-85c4-576b-6fbb-85f3daac25a8, type=action, name=ClearTaskContext, state=READY args=[]
+[2026-03-06T23:08:49.805Z] [BTMgr] [BehaviorTreeManager]     Node: id=91f2efa5-3429-9fa8-eeda-2ab31356c963, type=action, name=Loop, state=READY args=[]
+[2026-03-06T23:08:49.806Z] [BT] [AgentBTRunner] LLM node handler keys: __LLM_ACTION__GeneratePRContent, __LLM_ACTION__WritePRComment
+[2026-03-06T23:08:49.806Z] [BT] [AgentBTRunner] Iteration 1, tree state: READY
+[2026-03-06T23:08:49.806Z] [BTMgr] [BTMgr] Executing action: WaitForAgentMessage
+[2026-03-06T23:08:49.806Z] [ActionRegistry] [WaitForAgentMessage] Task assigned (fallback): continuousTaskId=undefined, standardTaskId=73
+[2026-03-06T23:08:49.807Z] [BTMgr] Node state change: id=8e66ee4f-4c9f-becc-7789-e13c3b47c022, type=action, name=WaitForAgentMessage, READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BTMgr] Emitting node_state_changed event: WaitForAgentMessage (id=8e66ee4f-4c9f-becc-7789-e13c3b47c022) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Received node_state_changed: WaitForAgentMessage (8e66ee4f-4c9f-becc-7789-e13c3b47c022) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:49.807Z] [BTMgr] Node state change: id=8f5ab743-37e1-6c2b-0f99-6835240e1c97, type=sequence, name=SEQUENCE, READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=8f5ab743-37e1-6c2b-0f99-6835240e1c97) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (8f5ab743-37e1-6c2b-0f99-6835240e1c97) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:49.807Z] [BTMgr] Node state change: id=bebee3b1-baec-6694-f692-9516bf0f468f, type=root, name=ROOT, READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BTMgr] Emitting node_state_changed event: ROOT (id=bebee3b1-baec-6694-f692-9516bf0f468f) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Received node_state_changed: ROOT (bebee3b1-baec-6694-f692-9516bf0f468f) READY -> RUNNING
+[2026-03-06T23:08:49.807Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:49.807Z] [BTMgr] [BehaviorTreeManager] Tree state changed: READY -> RUNNING
+[2026-03-06T23:08:50.821Z] [BT] [AgentBTRunner] Iteration 2, tree state: RUNNING
+[2026-03-06T23:08:50.821Z] [BTMgr] Node state change: id=8e66ee4f-4c9f-becc-7789-e13c3b47c022, type=action, name=WaitForAgentMessage, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:50.821Z] [BTMgr] Emitting node_state_changed event: WaitForAgentMessage (id=8e66ee4f-4c9f-becc-7789-e13c3b47c022) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:50.821Z] [BT] [AgentBTRunner] Received node_state_changed: WaitForAgentMessage (8e66ee4f-4c9f-becc-7789-e13c3b47c022) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:50.821Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:50.821Z] [BTMgr] [BTMgr] Executing action: FetchTaskContext
+[2026-03-06T23:08:50.822Z] [ActionRegistry] [FetchTaskContext] Fetching task context with QA feedback detection...
+[2026-03-06T23:08:50.825Z] [BTMgr] Node state change: id=1df36984-cb21-5e84-c340-19e7ff18bd27, type=action, name=FetchTaskContext, READY -> RUNNING
+[2026-03-06T23:08:50.825Z] [BTMgr] Emitting node_state_changed event: FetchTaskContext (id=1df36984-cb21-5e84-c340-19e7ff18bd27) READY -> RUNNING
+[2026-03-06T23:08:50.825Z] [BT] [AgentBTRunner] Received node_state_changed: FetchTaskContext (1df36984-cb21-5e84-c340-19e7ff18bd27) READY -> RUNNING
+[2026-03-06T23:08:50.825Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:50.828Z] [ActionRegistry] [FetchTaskContext] Got result: object
+[2026-03-06T23:08:50.828Z] [ActionRegistry] [FetchTaskContext] Detected MCP wrapper format, unwrapping...
+[2026-03-06T23:08:50.828Z] [ActionRegistry] [FetchTaskContext] taskDetails keys: success, task, comments, executions, executionsPagination
+[2026-03-06T23:08:50.828Z] [ActionRegistry] [FetchTaskContext] Found 1 QA executions in history
+[2026-03-06T23:08:50.828Z] [ActionRegistry] [FetchTaskContext] Found 2 QA feedback comments
+[2026-03-06T23:08:50.836Z] [ActionRegistry] [FetchTaskContext] QA bounce count: 0
+[2026-03-06T23:08:50.836Z] [ActionRegistry] [FetchTaskContext] Complete: isQARejection=true, hasQAFeedback=true, bounceCount=0, title="Implement weather_cache schema migration for TTL caching, uniqueness/versioning, and read-optimized indexes", description=present
+[2026-03-06T23:08:51.827Z] [BT] [AgentBTRunner] Iteration 3, tree state: RUNNING
+[2026-03-06T23:08:51.828Z] [BTMgr] Node state change: id=1df36984-cb21-5e84-c340-19e7ff18bd27, type=action, name=FetchTaskContext, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:51.828Z] [BTMgr] Emitting node_state_changed event: FetchTaskContext (id=1df36984-cb21-5e84-c340-19e7ff18bd27) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:51.828Z] [BT] [AgentBTRunner] Received node_state_changed: FetchTaskContext (1df36984-cb21-5e84-c340-19e7ff18bd27) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:51.828Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:51.828Z] [BTMgr] [BTMgr] Executing action: ExtractTaskFiles
+[2026-03-06T23:08:51.828Z] [ActionRegistry] [ExtractTaskFiles] Extracting task-specific file list from comments...
+[2026-03-06T23:08:51.829Z] [ActionRegistry] [ExtractTaskFiles] Found 5 task-specific files: alembic/versions/0001_baseline.py, app/db/models.py, tests/test_migrations.py, tests/test_weather_cache_query.py, logs_llm/mcp-server-2026-03-05.log
+[2026-03-06T23:08:51.829Z] [ActionRegistry] [ExtractTaskFiles] Parsed engineer test setup: {"testCommand":"npm test","projectType":"node"}
+[2026-03-06T23:08:51.829Z] [BTMgr] Node state change: id=07be9e31-274e-ba48-093d-69eadeaf5973, type=action, name=ExtractTaskFiles, READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BTMgr] Emitting node_state_changed event: ExtractTaskFiles (id=07be9e31-274e-ba48-093d-69eadeaf5973) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Received node_state_changed: ExtractTaskFiles (07be9e31-274e-ba48-093d-69eadeaf5973) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:51.829Z] [BTMgr] Node state change: id=2a2fbb0b-1ab9-325a-c69b-de5257298021, type=sequence, name=SEQUENCE, READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=2a2fbb0b-1ab9-325a-c69b-de5257298021) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (2a2fbb0b-1ab9-325a-c69b-de5257298021) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:51.829Z] [BTMgr] Node state change: id=84971f02-f595-b705-91ad-7fead635defa, type=selector, name=SELECTOR, READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BTMgr] Emitting node_state_changed event: SELECTOR (id=84971f02-f595-b705-91ad-7fead635defa) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Received node_state_changed: SELECTOR (84971f02-f595-b705-91ad-7fead635defa) READY -> RUNNING
+[2026-03-06T23:08:51.829Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:52.834Z] [BT] [AgentBTRunner] Iteration 4, tree state: RUNNING
+[2026-03-06T23:08:52.834Z] [BTMgr] Node state change: id=07be9e31-274e-ba48-093d-69eadeaf5973, type=action, name=ExtractTaskFiles, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:52.834Z] [BTMgr] Emitting node_state_changed event: ExtractTaskFiles (id=07be9e31-274e-ba48-093d-69eadeaf5973) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:52.835Z] [BT] [AgentBTRunner] Received node_state_changed: ExtractTaskFiles (07be9e31-274e-ba48-093d-69eadeaf5973) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:52.835Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:52.835Z] [BTMgr] [BTMgr] Executing action: GitDiff
+[2026-03-06T23:08:52.838Z] [ActionRegistry] [GitDiff] Starting git diff detection...
+[2026-03-06T23:08:52.838Z] [ActionRegistry] [GitDiff] Scoping diff to 5 task-specific files: alembic/versions/0001_baseline.py, app/db/models.py, tests/test_migrations.py, tests/test_weather_cache_query.py, logs_llm/mcp-server-2026-03-05.log
+[2026-03-06T23:08:52.838Z] [ActionRegistry] [GitDiff] Running branch diff (git diff main/master...HEAD)...
+[2026-03-06T23:08:52.861Z] [BTMgr] Node state change: id=a60313e3-e175-f4ad-8697-a6829a9d0612, type=action, name=GitDiff, READY -> RUNNING
+[2026-03-06T23:08:52.861Z] [BTMgr] Emitting node_state_changed event: GitDiff (id=a60313e3-e175-f4ad-8697-a6829a9d0612) READY -> RUNNING
+[2026-03-06T23:08:52.861Z] [BT] [AgentBTRunner] Received node_state_changed: GitDiff (a60313e3-e175-f4ad-8697-a6829a9d0612) READY -> RUNNING
+[2026-03-06T23:08:52.861Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:52.862Z] [ActionRegistry] [GitDiff] Branch diff output length: 0
+[2026-03-06T23:08:52.874Z] [ActionRegistry] [GitDiff] Zero commits between main and HEAD — no branch-specific changes
+[2026-03-06T23:08:52.875Z] [ActionRegistry] [GitDiff] Running git status --porcelain...
+[2026-03-06T23:08:52.884Z] [ActionRegistry] [GitDiff] git status output length: 38
+[2026-03-06T23:08:52.884Z] [ActionRegistry] [GitDiff] Filtered git status to 1 task-relevant lines
+[2026-03-06T23:08:52.885Z] [ActionRegistry] [GitDiff] git status output:  M logs_llm/mcp-server-2026-03-05.log
+[2026-03-06T23:08:52.885Z] [ActionRegistry] [GitDiff] Running git diff --cached...
+[2026-03-06T23:08:52.893Z] [ActionRegistry] [GitDiff] git diff --cached output length: 0
+[2026-03-06T23:08:52.894Z] [ActionRegistry] [GitDiff] Running git diff...
+[2026-03-06T23:08:53.011Z] [ActionRegistry] [GitDiff] git diff output length: 5141259
+[2026-03-06T23:08:53.012Z] [ActionRegistry] [GitDiff] Running git diff HEAD...
+[2026-03-06T23:08:53.120Z] [ActionRegistry] [GitDiff] git diff HEAD output length: 5141259
+[2026-03-06T23:08:53.121Z] [ActionRegistry] [GitDiff] Final output length: 5141609
+[2026-03-06T23:08:53.121Z] [ActionRegistry] [GitDiff] First 500 chars: [SCOPED TO TASK FILES: alembic/versions/0001_baseline.py, app/db/models.py, tests/test_migrations.py, tests/test_weather_cache_query.py, logs_llm/mcp-server-2026-03-05.log]
+
+
+[UNCOMMITTED CHANGES (git status)]
+Modified files (1): logs_llm/mcp-server-2026-03-05.log
+
+Raw git status:
+ M logs_llm/mcp-server-2026-03-05.log
+
+[UNSTAGED CHANGES (git diff)]
+diff --git a/logs_llm/mcp-server-2026-03-05.log b/logs_llm/mcp-server-2026-03-05.log
+index c546776..d543ab1 100644
+--- a/logs_llm/mcp-server-2026-03-
+[2026-03-06T23:08:53.121Z] [ActionRegistry] [GitDiff] Truncated diff from 5141609 to 10107 chars
+[2026-03-06T23:08:53.121Z] [ActionRegistry] [GitDiff] Set baseBranch on blackboard: main
+[2026-03-06T23:08:53.121Z] [ActionRegistry] [GitDiff] Set noBranchChanges=true on blackboard — branch is identical to base
+[2026-03-06T23:08:53.866Z] [BT] [AgentBTRunner] Iteration 5, tree state: RUNNING
+[2026-03-06T23:08:53.867Z] [BTMgr] Node state change: id=a60313e3-e175-f4ad-8697-a6829a9d0612, type=action, name=GitDiff, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:53.867Z] [BTMgr] Emitting node_state_changed event: GitDiff (id=a60313e3-e175-f4ad-8697-a6829a9d0612) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:53.867Z] [BT] [AgentBTRunner] Received node_state_changed: GitDiff (a60313e3-e175-f4ad-8697-a6829a9d0612) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:53.868Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:53.868Z] [BTMgr] [BTMgr] Executing action: CheckMaestroScreenshots
+[2026-03-06T23:08:53.869Z] [ActionRegistry] [CheckMaestroScreenshots] Checking for Maestro E2E screenshots...
+[2026-03-06T23:08:53.870Z] [ActionRegistry] [CheckMaestroScreenshots] No .agentloop/pr-screenshots/ directory found
+[2026-03-06T23:08:53.870Z] [BTMgr] Node state change: id=e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5, type=action, name=CheckMaestroScreenshots, READY -> RUNNING
+[2026-03-06T23:08:53.870Z] [BTMgr] Emitting node_state_changed event: CheckMaestroScreenshots (id=e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5) READY -> RUNNING
+[2026-03-06T23:08:53.870Z] [BT] [AgentBTRunner] Received node_state_changed: CheckMaestroScreenshots (e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5) READY -> RUNNING
+[2026-03-06T23:08:53.870Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:54.877Z] [BTMgr] Node state change: id=e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5, type=action, name=CheckMaestroScreenshots, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:54.878Z] [BTMgr] Emitting node_state_changed event: CheckMaestroScreenshots (id=e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:54.878Z] [BT] [AgentBTRunner] Received node_state_changed: CheckMaestroScreenshots (e7e1bbe2-8eed-5d42-a127-8d9c5f343ec5) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:54.878Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:54.879Z] [BTMgr] [BTMgr] Executing action: CommitScreenshots
+[2026-03-06T23:08:54.880Z] [ActionRegistry] [CommitScreenshots] Checking if screenshots need to be committed...
+[2026-03-06T23:08:54.880Z] [ActionRegistry] [CommitScreenshots] No screenshots to commit — skipping
+[2026-03-06T23:08:54.880Z] [BTMgr] Node state change: id=99be96c2-a21f-3235-66cc-5a9a78d1600e, type=action, name=CommitScreenshots, READY -> RUNNING
+[2026-03-06T23:08:54.880Z] [BTMgr] Emitting node_state_changed event: CommitScreenshots (id=99be96c2-a21f-3235-66cc-5a9a78d1600e) READY -> RUNNING
+[2026-03-06T23:08:54.880Z] [BT] [AgentBTRunner] Received node_state_changed: CommitScreenshots (99be96c2-a21f-3235-66cc-5a9a78d1600e) READY -> RUNNING
+[2026-03-06T23:08:54.880Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:55.883Z] [BTMgr] Node state change: id=99be96c2-a21f-3235-66cc-5a9a78d1600e, type=action, name=CommitScreenshots, RUNNING -> SUCCEEDED
+[2026-03-06T23:08:55.883Z] [BTMgr] Emitting node_state_changed event: CommitScreenshots (id=99be96c2-a21f-3235-66cc-5a9a78d1600e) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:55.884Z] [BT] [AgentBTRunner] Received node_state_changed: CommitScreenshots (99be96c2-a21f-3235-66cc-5a9a78d1600e) RUNNING -> SUCCEEDED
+[2026-03-06T23:08:55.884Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:55.884Z] [BTMgr] Node state change: id=f27484cf-73be-0229-8f96-366b6eca48d8, type=condition, name=HasCodeChanges, READY -> SUCCEEDED
+[2026-03-06T23:08:55.884Z] [BTMgr] Emitting node_state_changed event: HasCodeChanges (id=f27484cf-73be-0229-8f96-366b6eca48d8) READY -> SUCCEEDED
+[2026-03-06T23:08:55.884Z] [BT] [AgentBTRunner] Received node_state_changed: HasCodeChanges (f27484cf-73be-0229-8f96-366b6eca48d8) READY -> SUCCEEDED
+[2026-03-06T23:08:55.884Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:55.884Z] [BTMgr] Node state change: id=e269bf93-d6d7-7c85-e27a-0e986e4593d1, type=flip, name=FLIP, READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BTMgr] Emitting node_state_changed event: FLIP (id=e269bf93-d6d7-7c85-e27a-0e986e4593d1) READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BT] [AgentBTRunner] Received node_state_changed: FLIP (e269bf93-d6d7-7c85-e27a-0e986e4593d1) READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:55.885Z] [BTMgr] Node state change: id=8e3e92db-f448-47f0-70f0-8556e0c79794, type=sequence, name=SEQUENCE, READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=8e3e92db-f448-47f0-70f0-8556e0c79794) READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (8e3e92db-f448-47f0-70f0-8556e0c79794) READY -> FAILED
+[2026-03-06T23:08:55.885Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:55.885Z] [BTMgr] [BTMgr] Executing action: CheckExistingPR
+[2026-03-06T23:08:55.885Z] [ActionRegistry] [CheckExistingPR] Checking for existing open PR on current branch...
+[2026-03-06T23:08:55.898Z] [ActionRegistry] [CheckExistingPR] Checking for open PRs on branch: "task/73-implement-weather-cache-schema"
+[2026-03-06T23:08:56.162Z] [BTMgr] Node state change: id=e8b1e9d3-f539-6f0d-8b48-4661663836c9, type=action, name=CheckExistingPR, READY -> RUNNING
+[2026-03-06T23:08:56.162Z] [BTMgr] Emitting node_state_changed event: CheckExistingPR (id=e8b1e9d3-f539-6f0d-8b48-4661663836c9) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Received node_state_changed: CheckExistingPR (e8b1e9d3-f539-6f0d-8b48-4661663836c9) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:56.163Z] [BTMgr] Node state change: id=c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9, type=sequence, name=SEQUENCE, READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:56.163Z] [BTMgr] Node state change: id=dc8768d8-4514-98c5-cee6-aa7f46eaab36, type=selector, name=SELECTOR, READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BTMgr] Emitting node_state_changed event: SELECTOR (id=dc8768d8-4514-98c5-cee6-aa7f46eaab36) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Received node_state_changed: SELECTOR (dc8768d8-4514-98c5-cee6-aa7f46eaab36) READY -> RUNNING
+[2026-03-06T23:08:56.163Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:56.164Z] [ActionRegistry] [CheckExistingPR] No existing open PR found for this branch
+[2026-03-06T23:08:57.167Z] [BTMgr] Node state change: id=e8b1e9d3-f539-6f0d-8b48-4661663836c9, type=action, name=CheckExistingPR, RUNNING -> FAILED
+[2026-03-06T23:08:57.168Z] [BTMgr] Emitting node_state_changed event: CheckExistingPR (id=e8b1e9d3-f539-6f0d-8b48-4661663836c9) RUNNING -> FAILED
+[2026-03-06T23:08:57.168Z] [BT] [AgentBTRunner] Received node_state_changed: CheckExistingPR (e8b1e9d3-f539-6f0d-8b48-4661663836c9) RUNNING -> FAILED
+[2026-03-06T23:08:57.168Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:57.168Z] [BTMgr] Node state change: id=c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9, type=sequence, name=SEQUENCE, RUNNING -> FAILED
+[2026-03-06T23:08:57.169Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9) RUNNING -> FAILED
+[2026-03-06T23:08:57.169Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (c0d29ce3-7ed9-0ee7-639f-bc19e75ccad9) RUNNING -> FAILED
+[2026-03-06T23:08:57.169Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:57.169Z] [BTMgr] [BTMgr] Executing action: __LLM_ACTION__GeneratePRContent
+[2026-03-06T23:08:57.170Z] [BT] [AgentBTRunner] Executing LLM action: __LLM_ACTION__GeneratePRContent
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent blackboard.custom keys: taskComments, taskDetails, qaBounceCount, isQARejection, qaFeedback, hasQAFeedback, taskFiles, engineerTestSetup, gitDiff, baseBranch, noBranchChanges, maestroScreenshots, existingPRFound
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'taskTitle' - direct: true, custom: false, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'taskDescription' - direct: true, custom: false, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'taskComments' - direct: true, custom: true, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'gitDiff' - direct: true, custom: true, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'taskFiles' - direct: true, custom: true, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'baseBranch' - direct: true, custom: true, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent looking for 'maestroScreenshots' - direct: true, custom: true, typed: true
+[2026-03-06T23:08:57.171Z] [BT] [AgentBTRunner] GeneratePRContent context keys: taskTitle, taskDescription, taskComments, gitDiff, taskFiles, baseBranch, maestroScreenshots
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[taskTitle]: "Implement weather_cache schema migration for TTL caching, uniqueness/versioning, and read-optimized ..."
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[taskDescription]: "In the **PostgreSQL schema** for the **Python FastAPI API server**, add forward and rollback migrati..."
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[taskComments]: "
+
+*** QA REJECTION - FIX REQUIRED ***
+This task was rejected by QA. You have 3 attempt(s) remaining...."
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[gitDiff]: "[SCOPED TO TASK FILES: alembic/versions/0001_baseline.py, app/db/models.py, tests/test_migrations.py..."
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[taskFiles]: [object 5 keys]
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[baseBranch]: "main"
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent context[maestroScreenshots]: null
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent calling LLM executor with model: openai/gpt-5.3-codex
+[2026-03-06T23:08:57.172Z] [BT] [AgentBTRunner] GeneratePRContent allowedTools: , maxTurns: (default)
+[2026-03-06T23:08:57.182Z] [BTMgr] Node state change: id=9abd2995-b2dc-9c77-7a70-0e1db9be6a53, type=action, name=GeneratePRContent, READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BTMgr] Emitting node_state_changed event: GeneratePRContent (id=9abd2995-b2dc-9c77-7a70-0e1db9be6a53) READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BT] [AgentBTRunner] Received node_state_changed: GeneratePRContent (9abd2995-b2dc-9c77-7a70-0e1db9be6a53) READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:57.182Z] [BTMgr] Node state change: id=bbc73080-cc98-b266-af22-f5f8c550886e, type=sequence, name=SEQUENCE, READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=bbc73080-cc98-b266-af22-f5f8c550886e) READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (bbc73080-cc98-b266-af22-f5f8c550886e) READY -> RUNNING
+[2026-03-06T23:08:57.182Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:08:57.183Z] [BT] [AgentBTRunner] Waiting for async operation to complete...
+[2026-03-06T23:09:12.485Z] [BT] [AgentBTRunner] GeneratePRContent LLM executor returned - success: true, hasData: true, error: none
+[2026-03-06T23:09:12.485Z] [BT] [AgentBTRunner] GeneratePRContent stored result at key: prContent
+[2026-03-06T23:09:12.485Z] [BT] [AgentBTRunner] GeneratePRContent about to emit decision - success: true, data type: object, data defined: true
+[2026-03-06T23:09:12.485Z] [BT] [AgentBTRunner] GeneratePRContent data keys: prTitle, prBody
+[2026-03-06T23:09:12.486Z] [BT] [AgentBTRunner] GeneratePRContent returning success=true
+[2026-03-06T23:09:12.486Z] [BT] [AgentBTRunner] Async operation completed
+[2026-03-06T23:09:13.487Z] [BTMgr] Node state change: id=9abd2995-b2dc-9c77-7a70-0e1db9be6a53, type=action, name=GeneratePRContent, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:13.487Z] [BTMgr] Emitting node_state_changed event: GeneratePRContent (id=9abd2995-b2dc-9c77-7a70-0e1db9be6a53) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:13.487Z] [BT] [AgentBTRunner] Received node_state_changed: GeneratePRContent (9abd2995-b2dc-9c77-7a70-0e1db9be6a53) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:13.487Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:13.488Z] [BTMgr] [BTMgr] Executing action: GitPush
+[2026-03-06T23:09:13.488Z] [ActionRegistry] [GitPush] Pushing current branch to origin...
+[2026-03-06T23:09:13.503Z] [BTMgr] Node state change: id=baac4d1d-3c50-750d-df07-3e5551244191, type=action, name=GitPush, READY -> RUNNING
+[2026-03-06T23:09:13.503Z] [BTMgr] Emitting node_state_changed event: GitPush (id=baac4d1d-3c50-750d-df07-3e5551244191) READY -> RUNNING
+[2026-03-06T23:09:13.503Z] [BT] [AgentBTRunner] Received node_state_changed: GitPush (baac4d1d-3c50-750d-df07-3e5551244191) READY -> RUNNING
+[2026-03-06T23:09:13.503Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:13.504Z] [ActionRegistry] [GitPush] Ahead check: "new-branch", hasCommitsToPush: true
+[2026-03-06T23:09:13.525Z] [ActionRegistry] [GitPush] Detected branch name: "task/73-implement-weather-cache-schema"
+[2026-03-06T23:09:13.535Z] [ActionRegistry] [GitPush] Recent commits on branch: 73c1076 feat(db): add versioned weather_cache migration with TTL and indexed latest lookup
+f2eaa4d feat: add weather cache migration with indexed TTL lookup
+ab1996b fix(qa): rework test detection for 
+[2026-03-06T23:09:13.535Z] [ActionRegistry] [GitPush] Pushing branch "task/73-implement-weather-cache-schema" to origin...
+[2026-03-06T23:09:13.919Z] [ActionRegistry] [GitPush] Successfully pushed branch "task/73-implement-weather-cache-schema" to origin
+[2026-03-06T23:09:14.505Z] [BTMgr] Node state change: id=baac4d1d-3c50-750d-df07-3e5551244191, type=action, name=GitPush, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:14.505Z] [BTMgr] Emitting node_state_changed event: GitPush (id=baac4d1d-3c50-750d-df07-3e5551244191) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:14.505Z] [BT] [AgentBTRunner] Received node_state_changed: GitPush (baac4d1d-3c50-750d-df07-3e5551244191) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:14.505Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:14.506Z] [BTMgr] [BTMgr] Executing action: GitCreatePR
+[2026-03-06T23:09:14.506Z] [ActionRegistry] [GitCreatePR] Creating pull request for current task branch...
+[2026-03-06T23:09:14.522Z] [ActionRegistry] [GitCreatePR] Detected branch name: "task/73-implement-weather-cache-schema"
+[2026-03-06T23:09:14.522Z] [ActionRegistry] [GitCreatePR] Using base branch for PR: main
+[2026-03-06T23:09:14.522Z] [ActionRegistry] [GitCreatePR] Skipping PR creation — noBranchChanges flag is set (branch is identical to main)
+[2026-03-06T23:09:14.522Z] [BTMgr] Node state change: id=49e5e41f-4adc-e9e8-3b16-585a8f348827, type=action, name=GitCreatePR, READY -> RUNNING
+[2026-03-06T23:09:14.522Z] [BTMgr] Emitting node_state_changed event: GitCreatePR (id=49e5e41f-4adc-e9e8-3b16-585a8f348827) READY -> RUNNING
+[2026-03-06T23:09:14.522Z] [BT] [AgentBTRunner] Received node_state_changed: GitCreatePR (49e5e41f-4adc-e9e8-3b16-585a8f348827) READY -> RUNNING
+[2026-03-06T23:09:14.522Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:15.524Z] [BTMgr] Node state change: id=49e5e41f-4adc-e9e8-3b16-585a8f348827, type=action, name=GitCreatePR, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:15.524Z] [BTMgr] Emitting node_state_changed event: GitCreatePR (id=49e5e41f-4adc-e9e8-3b16-585a8f348827) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:15.524Z] [BT] [AgentBTRunner] Received node_state_changed: GitCreatePR (49e5e41f-4adc-e9e8-3b16-585a8f348827) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:15.525Z] [BTMgr] [BTMgr] Executing action: __LLM_ACTION__WritePRComment
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] Executing LLM action: __LLM_ACTION__WritePRComment
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment blackboard.custom keys: taskComments, taskDetails, qaBounceCount, isQARejection, qaFeedback, hasQAFeedback, taskFiles, engineerTestSetup, gitDiff, baseBranch, noBranchChanges, maestroScreenshots, existingPRFound, prContent, gitPushResult, gitPushSuccess, gitPushBranch, gitCreatePRResult, gitCreatePRSuccess, gitCreatePRSkippedNoChanges
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment looking for 'taskTitle' - direct: true, custom: false, typed: true
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment looking for 'prContent' - direct: true, custom: true, typed: true
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment looking for 'custom' - direct: true, custom: false, typed: true
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment context keys: taskTitle, prContent, custom
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment context[taskTitle]: "Implement weather_cache schema migration for TTL caching, uniqueness/versioning, and read-optimized ..."
+[2026-03-06T23:09:15.525Z] [BT] [AgentBTRunner] WritePRComment context[prContent]: [object 2 keys]
+[2026-03-06T23:09:15.526Z] [BT] [AgentBTRunner] WritePRComment context[custom]: [object 20 keys]
+[2026-03-06T23:09:15.526Z] [BT] [AgentBTRunner] WritePRComment calling LLM executor with model: openai/gpt-5.3-codex
+[2026-03-06T23:09:15.526Z] [BT] [AgentBTRunner] WritePRComment allowedTools: , maxTurns: (default)
+[2026-03-06T23:09:15.526Z] [BTMgr] Node state change: id=580a40ca-2226-410d-a7e5-b6142294ff08, type=action, name=WritePRComment, READY -> RUNNING
+[2026-03-06T23:09:15.527Z] [BTMgr] Emitting node_state_changed event: WritePRComment (id=580a40ca-2226-410d-a7e5-b6142294ff08) READY -> RUNNING
+[2026-03-06T23:09:15.527Z] [BT] [AgentBTRunner] Received node_state_changed: WritePRComment (580a40ca-2226-410d-a7e5-b6142294ff08) READY -> RUNNING
+[2026-03-06T23:09:15.527Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:15.527Z] [BT] [AgentBTRunner] Waiting for async operation to complete...
+[2026-03-06T23:09:18.594Z] [BT] [AgentBTRunner] WritePRComment LLM executor returned - success: true, hasData: true, error: none
+[2026-03-06T23:09:18.594Z] [BT] [AgentBTRunner] WritePRComment stored result at key: releaseComment
+[2026-03-06T23:09:18.594Z] [BT] [AgentBTRunner] WritePRComment about to emit decision - success: true, data type: object, data defined: true
+[2026-03-06T23:09:18.594Z] [BT] [AgentBTRunner] WritePRComment data keys: comment
+[2026-03-06T23:09:18.594Z] [BT] [AgentBTRunner] WritePRComment returning success=true
+[2026-03-06T23:09:18.595Z] [BT] [AgentBTRunner] Async operation completed
+[2026-03-06T23:09:19.596Z] [BTMgr] Node state change: id=580a40ca-2226-410d-a7e5-b6142294ff08, type=action, name=WritePRComment, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:19.596Z] [BTMgr] Emitting node_state_changed event: WritePRComment (id=580a40ca-2226-410d-a7e5-b6142294ff08) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:19.596Z] [BT] [AgentBTRunner] Received node_state_changed: WritePRComment (580a40ca-2226-410d-a7e5-b6142294ff08) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:19.597Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:19.597Z] [BTMgr] [BTMgr] Executing action: AddReleaseComment
+[2026-03-06T23:09:19.600Z] [BTMgr] Node state change: id=69c2d4ec-e25d-f089-42aa-9cebffb61eec, type=action, name=AddReleaseComment, READY -> RUNNING
+[2026-03-06T23:09:19.601Z] [BTMgr] Emitting node_state_changed event: AddReleaseComment (id=69c2d4ec-e25d-f089-42aa-9cebffb61eec) READY -> RUNNING
+[2026-03-06T23:09:19.601Z] [BT] [AgentBTRunner] Received node_state_changed: AddReleaseComment (69c2d4ec-e25d-f089-42aa-9cebffb61eec) READY -> RUNNING
+[2026-03-06T23:09:19.601Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:20.602Z] [BTMgr] Node state change: id=69c2d4ec-e25d-f089-42aa-9cebffb61eec, type=action, name=AddReleaseComment, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:20.603Z] [BTMgr] Emitting node_state_changed event: AddReleaseComment (id=69c2d4ec-e25d-f089-42aa-9cebffb61eec) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:20.603Z] [BT] [AgentBTRunner] Received node_state_changed: AddReleaseComment (69c2d4ec-e25d-f089-42aa-9cebffb61eec) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:20.603Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:20.603Z] [BTMgr] [BTMgr] Executing action: ReportTriggerPass
+[2026-03-06T23:09:20.605Z] [BTMgr] Node state change: id=eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef, type=action, name=ReportTriggerPass, READY -> RUNNING
+[2026-03-06T23:09:20.605Z] [BTMgr] Emitting node_state_changed event: ReportTriggerPass (id=eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef) READY -> RUNNING
+[2026-03-06T23:09:20.605Z] [BT] [AgentBTRunner] Received node_state_changed: ReportTriggerPass (eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef) READY -> RUNNING
+[2026-03-06T23:09:20.605Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.605Z] [BTMgr] Node state change: id=eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef, type=action, name=ReportTriggerPass, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.605Z] [BTMgr] Emitting node_state_changed event: ReportTriggerPass (id=eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.605Z] [BT] [AgentBTRunner] Received node_state_changed: ReportTriggerPass (eee9c6b3-c6e0-4c74-c99c-718c5a7fb9ef) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.605Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.606Z] [BTMgr] Node state change: id=bbc73080-cc98-b266-af22-f5f8c550886e, type=sequence, name=SEQUENCE, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=bbc73080-cc98-b266-af22-f5f8c550886e) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (bbc73080-cc98-b266-af22-f5f8c550886e) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.606Z] [BTMgr] Node state change: id=dc8768d8-4514-98c5-cee6-aa7f46eaab36, type=selector, name=SELECTOR, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BTMgr] Emitting node_state_changed event: SELECTOR (id=dc8768d8-4514-98c5-cee6-aa7f46eaab36) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Received node_state_changed: SELECTOR (dc8768d8-4514-98c5-cee6-aa7f46eaab36) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.606Z] [BTMgr] Node state change: id=2a2fbb0b-1ab9-325a-c69b-de5257298021, type=sequence, name=SEQUENCE, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=2a2fbb0b-1ab9-325a-c69b-de5257298021) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (2a2fbb0b-1ab9-325a-c69b-de5257298021) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.606Z] [BTMgr] Node state change: id=84971f02-f595-b705-91ad-7fead635defa, type=selector, name=SELECTOR, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BTMgr] Emitting node_state_changed event: SELECTOR (id=84971f02-f595-b705-91ad-7fead635defa) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Received node_state_changed: SELECTOR (84971f02-f595-b705-91ad-7fead635defa) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:21.606Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:21.607Z] [BTMgr] [BTMgr] Executing action: ClearTaskContext
+[2026-03-06T23:09:21.607Z] [ActionRegistry] [ClearTaskContext] Clearing task-specific context for next iteration...
+[2026-03-06T23:09:21.607Z] [ActionRegistry] [ClearTaskContext] Task context cleared, ready for next task
+[2026-03-06T23:09:21.607Z] [BTMgr] Node state change: id=6a560b2f-85c4-576b-6fbb-85f3daac25a8, type=action, name=ClearTaskContext, READY -> RUNNING
+[2026-03-06T23:09:21.608Z] [BTMgr] Emitting node_state_changed event: ClearTaskContext (id=6a560b2f-85c4-576b-6fbb-85f3daac25a8) READY -> RUNNING
+[2026-03-06T23:09:21.608Z] [BT] [AgentBTRunner] Received node_state_changed: ClearTaskContext (6a560b2f-85c4-576b-6fbb-85f3daac25a8) READY -> RUNNING
+[2026-03-06T23:09:21.608Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:22.609Z] [BTMgr] Node state change: id=6a560b2f-85c4-576b-6fbb-85f3daac25a8, type=action, name=ClearTaskContext, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:22.610Z] [BTMgr] Emitting node_state_changed event: ClearTaskContext (id=6a560b2f-85c4-576b-6fbb-85f3daac25a8) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:22.610Z] [BT] [AgentBTRunner] Received node_state_changed: ClearTaskContext (6a560b2f-85c4-576b-6fbb-85f3daac25a8) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:22.610Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:22.610Z] [BTMgr] [BTMgr] Executing action: Loop
+[2026-03-06T23:09:22.611Z] [BTMgr] Node state change: id=91f2efa5-3429-9fa8-eeda-2ab31356c963, type=action, name=Loop, READY -> RUNNING
+[2026-03-06T23:09:22.611Z] [BTMgr] Emitting node_state_changed event: Loop (id=91f2efa5-3429-9fa8-eeda-2ab31356c963) READY -> RUNNING
+[2026-03-06T23:09:22.611Z] [BT] [AgentBTRunner] Received node_state_changed: Loop (91f2efa5-3429-9fa8-eeda-2ab31356c963) READY -> RUNNING
+[2026-03-06T23:09:22.611Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:23.613Z] [BTMgr] Node state change: id=91f2efa5-3429-9fa8-eeda-2ab31356c963, type=action, name=Loop, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.613Z] [BTMgr] Emitting node_state_changed event: Loop (id=91f2efa5-3429-9fa8-eeda-2ab31356c963) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.613Z] [BT] [AgentBTRunner] Received node_state_changed: Loop (91f2efa5-3429-9fa8-eeda-2ab31356c963) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.613Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:23.614Z] [BTMgr] Node state change: id=8f5ab743-37e1-6c2b-0f99-6835240e1c97, type=sequence, name=SEQUENCE, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.614Z] [BTMgr] Emitting node_state_changed event: SEQUENCE (id=8f5ab743-37e1-6c2b-0f99-6835240e1c97) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.614Z] [BT] [AgentBTRunner] Received node_state_changed: SEQUENCE (8f5ab743-37e1-6c2b-0f99-6835240e1c97) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.614Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:23.614Z] [BTMgr] Node state change: id=bebee3b1-baec-6694-f692-9516bf0f468f, type=root, name=ROOT, RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.615Z] [BTMgr] Emitting node_state_changed event: ROOT (id=bebee3b1-baec-6694-f692-9516bf0f468f) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.615Z] [BT] [AgentBTRunner] Received node_state_changed: ROOT (bebee3b1-baec-6694-f692-9516bf0f468f) RUNNING -> SUCCEEDED
+[2026-03-06T23:09:23.615Z] [BT] [AgentBTRunner] Calling onNodeStateChanged callback
+[2026-03-06T23:09:23.615Z] [BTMgr] [BehaviorTreeManager] Tree state changed: RUNNING -> SUCCEEDED
+[2026-03-06T23:09:24.616Z] [BT] [AgentBTRunner] Tree completed with state: SUCCEEDED after 17 iterations
