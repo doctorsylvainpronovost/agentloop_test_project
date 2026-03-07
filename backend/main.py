@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import hashlib
@@ -44,6 +45,8 @@ LEGACY_DAY_DESCRIPTION = (
     "to receive the normalized canonical day response schema."
 )
 
+MESSAGE = "Backend scaffold is running."
+
 
 class ErrorDetail(BaseModel):
     code: str = Field(..., description="Stable machine-readable error code")
@@ -66,7 +69,7 @@ class CanonicalWeatherResponse(BaseModel):
 
 def main() -> int:
     """Run backend scaffold entrypoint."""
-    print("Backend scaffold is running.")
+    print(MESSAGE)
     return 0
 
 
