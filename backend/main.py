@@ -277,13 +277,13 @@ async def _fetch_weather_forecast(
     units: str,
     weather_client: WeatherClient,
     city_field_name: str,
-) -> Tuple[str, dict[str, Any]]:
+) -> Tuple[str, str, dict[str, Any], bool]:
     validated_city = _validate_required_query(city, field_name=city_field_name)
     validated_range = _validate_range(range_value)
 
     cached_payload = _read_cached_forecast(city=validated_city, range_value=validated_range, units=units)
     if cached_payload is not None:
-        return validated_range, cached_payload
+        return validated_city, validated_range, cached_payload, True
 
     try:
         data = await weather_client.fetch_forecast(
@@ -294,8 +294,7 @@ async def _fetch_weather_forecast(
     except WeatherServiceError as exc:
         raise _map_weather_error(exc) from exc
 
-    _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=data)
-    return validated_range, data
+    return validated_city, validated_range, data, False
 
 
 @app.get("/")
@@ -349,7 +348,7 @@ async def weather(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, Any]:
-    validated_range, forecast_payload = await _fetch_weather_forecast(
+    validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=city,
         range_value=range,
         units=units,
@@ -357,7 +356,10 @@ async def weather(
         city_field_name="city",
     )
 
-    return _build_weather_response(validated_range, forecast_payload)
+    response_payload = _build_weather_response(validated_range, forecast_payload)
+    if not served_from_cache:
+        _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=forecast_payload)
+    return response_payload
 
 
 @app.get(
@@ -380,7 +382,7 @@ async def weather_day(
     response.headers["Sunset"] = "Wed, 31 Dec 2026 23:59:59 GMT"
     response.headers["Link"] = '</api/weather?city={city}&range=day>; rel="successor-version"'
 
-    _, forecast_payload = await _fetch_weather_forecast(
+    validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=location,
         range_value="day",
         units=units,
@@ -388,7 +390,10 @@ async def weather_day(
         city_field_name="location",
     )
 
-    return {"data": forecast_payload, "source": "weatherapi"}
+    response_payload = {"data": forecast_payload, "source": "weatherapi"}
+    if not served_from_cache:
+        _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=forecast_payload)
+    return response_payload
 
 
 @app.get("/api/weather/3day")
@@ -397,14 +402,17 @@ async def weather_three_day(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, object]:
-    _, forecast_payload = await _fetch_weather_forecast(
+    validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=location,
         range_value="3day",
         units=units,
         weather_client=weather_client,
         city_field_name="location",
     )
-    return {"data": forecast_payload, "source": "weatherapi"}
+    response_payload = {"data": forecast_payload, "source": "weatherapi"}
+    if not served_from_cache:
+        _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=forecast_payload)
+    return response_payload
 
 
 @app.get("/api/weather/week")
@@ -413,14 +421,17 @@ async def weather_week(
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
 ) -> dict[str, object]:
-    _, forecast_payload = await _fetch_weather_forecast(
+    validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=location,
         range_value="week",
         units=units,
         weather_client=weather_client,
         city_field_name="location",
     )
-    return {"data": forecast_payload, "source": "weatherapi"}
+    response_payload = {"data": forecast_payload, "source": "weatherapi"}
+    if not served_from_cache:
+        _persist_cached_forecast(city=validated_city, range_value=validated_range, units=units, payload=forecast_payload)
+    return response_payload
 
 
 if __name__ == "__main__":
