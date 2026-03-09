@@ -122,7 +122,7 @@ const App = (): React.JSX.Element => {
 
   const submitDisabled = loading && activeRequestKey === manualRequestKey;
   const detectDisabled = loading && activeRequestKey !== null && activeRequestKey.startsWith("geo:");
-  const locationErrors = validationErrors?.fieldErrors.location ?? [];
+  const locationErrors = validationErrors?.fieldErrors.city ?? [];
   const generalErrors = validationErrors?.generalErrors ?? [];
 
   return (

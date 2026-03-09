@@ -327,7 +327,8 @@ export const buildForecastRequest = (
   }
 
   const params = new URLSearchParams({
-    location: normalizedLocation,
+    city: normalizedLocation,
+    range: range === "three-day" ? "3day" : range,
     units: "metric",
   });
 
@@ -338,7 +339,7 @@ export const buildForecastRequest = (
 
   const baseUrl = resolveApiBaseUrl(options.apiBaseUrl);
 
-  return `${baseUrl}/api/weather/${RANGE_ENDPOINT[range]}?${params.toString()}`;
+  return `${baseUrl}/api/weather?${params.toString()}`;
 };
 
 const describeGeolocationError = (error: GeolocationPositionError): string => {
