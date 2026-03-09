@@ -99,7 +99,7 @@ test("renders successful forecast response with unchanged summary fields", async
   await submitForm();
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0], "http://localhost:8000/api/weather/day?location=Berlin&units=metric");
+  assert.equal(calls[0], "http://localhost:8000/api/weather?city=Berlin&range=day&units=metric");
   assert.ok(document.body.textContent?.includes("Requested for:"));
   assert.ok(document.body.textContent?.includes("Berlin"));
   assert.ok(document.body.textContent?.includes("Temperature:"));
@@ -112,8 +112,8 @@ test("renders field-level validation message for location errors", async () => {
       JSON.stringify({
         detail: [
           {
-            loc: ["query", "location"],
-            msg: "location must not be empty",
+            loc: ["query", "city"],
+            msg: "city must not be empty",
           },
         ],
       }),
@@ -125,7 +125,7 @@ test("renders field-level validation message for location errors", async () => {
   await setInputValue(locationInput, "Rome");
   await submitForm();
 
-  assert.ok(document.body.textContent?.includes("location must not be empty"));
+  assert.ok(document.body.textContent?.includes("city must not be empty"));
 });
 
 test("renders non-field validation errors for structured 422 payloads", async () => {
@@ -134,7 +134,7 @@ test("renders non-field validation errors for structured 422 payloads", async ()
       JSON.stringify({
         detail: {
           errors: {
-            location: ["Location is required"],
+            city: ["City is required"],
           },
           non_field_errors: ["Please fix the highlighted fields"],
         },
@@ -147,7 +147,7 @@ test("renders non-field validation errors for structured 422 payloads", async ()
   await setInputValue(locationInput, "Madrid");
   await submitForm();
 
-  assert.ok(document.body.textContent?.includes("Location is required"));
+  assert.ok(document.body.textContent?.includes("City is required"));
   assert.ok(document.body.textContent?.includes("Please fix the highlighted fields"));
 });
 

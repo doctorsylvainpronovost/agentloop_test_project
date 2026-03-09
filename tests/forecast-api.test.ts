@@ -28,14 +28,14 @@ test("resolveApiBaseUrl supports legacy backend env variable names", () => {
   );
 });
 
-test("buildForecastRequest maps range to normalized backend paths", () => {
+test("buildForecastRequest maps range to canonical backend endpoint", () => {
   const dayEndpoint = buildForecastRequest({ location: "Paris", range: "day" });
   const threeDayEndpoint = buildForecastRequest({ location: "Paris", range: "three-day" });
   const weekEndpoint = buildForecastRequest({ location: "Paris", range: "week" });
 
-  assert.equal(dayEndpoint, "http://localhost:8000/api/weather/day?location=Paris&units=metric");
-  assert.equal(threeDayEndpoint, "http://localhost:8000/api/weather/3day?location=Paris&units=metric");
-  assert.equal(weekEndpoint, "http://localhost:8000/api/weather/week?location=Paris&units=metric");
+  assert.equal(dayEndpoint, "http://localhost:8000/api/weather?city=Paris&range=day&units=metric");
+  assert.equal(threeDayEndpoint, "http://localhost:8000/api/weather?city=Paris&range=3day&units=metric");
+  assert.equal(weekEndpoint, "http://localhost:8000/api/weather?city=Paris&range=week&units=metric");
 });
 
 test("buildForecastRequest includes coordinates when available", () => {
@@ -47,7 +47,7 @@ test("buildForecastRequest includes coordinates when available", () => {
 
   assert.equal(
     endpoint,
-    "http://localhost:8000/api/weather/day?location=48.857%2C+2.352&units=metric&lat=48.857&lon=2.352",
+    "http://localhost:8000/api/weather?city=48.857%2C+2.352&range=day&units=metric&lat=48.857&lon=2.352",
   );
 });
 
@@ -148,7 +148,7 @@ test("fetchForecast maps validation error arrays to ForecastApiError", async () 
     return new Response(
       JSON.stringify({
         detail: [
-          { loc: ["query", "location"], msg: "location must not be empty" },
+          { loc: ["query", "city"], msg: "city must not be empty" },
           { loc: ["query", "units"], msg: "Input should be metric or imperial" },
         ],
       }),
@@ -161,7 +161,7 @@ test("fetchForecast maps validation error arrays to ForecastApiError", async () 
     (error: unknown) => {
       assert.ok(error instanceof ForecastApiError);
       assert.equal(error.status, 422);
-      assert.deepEqual(error.validationErrors?.fieldErrors.location, ["location must not be empty"]);
+      assert.deepEqual(error.validationErrors?.fieldErrors.city, ["city must not be empty"]);
       assert.deepEqual(error.validationErrors?.fieldErrors.units, ["Input should be metric or imperial"]);
       return true;
     },
@@ -174,7 +174,7 @@ test("fetchForecast maps detail object validation errors with fallback message",
       JSON.stringify({
         detail: {
           errors: {
-            location: ["Location is required"],
+            city: ["City is required"],
           },
           non_field_errors: ["Please fix the highlighted fields"],
         },
@@ -187,7 +187,7 @@ test("fetchForecast maps detail object validation errors with fallback message",
     () => fetchForecast({ location: "Paris", range: "day" }, fakeFetch),
     (error: unknown) => {
       assert.ok(error instanceof ForecastApiError);
-      assert.deepEqual(error.validationErrors?.fieldErrors.location, ["Location is required"]);
+      assert.deepEqual(error.validationErrors?.fieldErrors.city, ["City is required"]);
       assert.deepEqual(error.validationErrors?.generalErrors, ["Please fix the highlighted fields"]);
       return true;
     },
