@@ -36,7 +36,7 @@ npm run backend:dev
 
 - Required query parameters:
   - `city`: non-empty string (trimmed)
-  - `range`: must be exactly `day`
+  - `range`: must be one of: `day`, `3day`, `week` (only `day` returns canonical normalized response)
 - Success response `200` (normalized canonical day response):
 
 ```json
@@ -99,7 +99,7 @@ GET /api/weather?city=London
 - Invalid `range`
 
 ```http
-GET /api/weather?city=London&range=week
+GET /api/weather?city=London&range=month
 ```
 
 ```json
