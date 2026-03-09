@@ -4,11 +4,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sqlite3
 import sys
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, Iterator, Optional, Tuple
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from pydantic import BaseModel, Field
@@ -46,6 +48,102 @@ LEGACY_DAY_DESCRIPTION = (
 )
 
 MESSAGE = "Backend scaffold is running."
+
+CACHE_TTL_SECONDS = 10 * 60
+DEFAULT_CACHE_DB_PATH = Path(__file__).resolve().parents[1] / ".weather_cache.sqlite3"
+
+
+def _get_cache_database_path() -> str:
+    configured = os.getenv("WEATHER_CACHE_DB", "").strip()
+    if configured:
+        return configured
+    return str(DEFAULT_CACHE_DB_PATH)
+
+
+def _ensure_cache_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS weather_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            city TEXT NOT NULL,
+            forecast_range TEXT NOT NULL,
+            units TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            expires_at INTEGER NOT NULL,
+            UNIQUE(city, forecast_range, units)
+        )
+        """
+    )
+    connection.commit()
+
+
+def get_cache_connection() -> Iterator[sqlite3.Connection]:
+    connection = sqlite3.connect(_get_cache_database_path(), check_same_thread=False)
+    try:
+        _ensure_cache_schema(connection)
+        yield connection
+    finally:
+        connection.close()
+
+
+def _normalize_cache_city(city: str) -> str:
+    return city.strip().lower()
+
+
+def _read_weather_cache(
+    connection: sqlite3.Connection,
+    *,
+    city: str,
+    range_value: str,
+    units: str,
+) -> dict[str, Any] | None:
+    _ensure_cache_schema(connection)
+    row = connection.execute(
+        """
+        SELECT payload
+        FROM weather_cache
+        WHERE city = ? AND forecast_range = ? AND units = ? AND expires_at > ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (_normalize_cache_city(city), range_value, units, int(time.time())),
+    ).fetchone()
+    if row is None:
+        return None
+    return json.loads(row[0])
+
+
+def _write_weather_cache(
+    connection: sqlite3.Connection,
+    *,
+    city: str,
+    range_value: str,
+    units: str,
+    payload: dict[str, Any],
+) -> None:
+    _ensure_cache_schema(connection)
+    now = int(time.time())
+    connection.execute(
+        """
+        INSERT INTO weather_cache (city, forecast_range, units, payload, created_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(city, forecast_range, units)
+        DO UPDATE SET
+            payload = excluded.payload,
+            created_at = excluded.created_at,
+            expires_at = excluded.expires_at
+        """,
+        (
+            _normalize_cache_city(city),
+            range_value,
+            units,
+            json.dumps(payload),
+            now,
+            now + CACHE_TTL_SECONDS,
+        ),
+    )
+    connection.commit()
 
 
 class ErrorDetail(BaseModel):
@@ -279,12 +377,18 @@ async def _fetch_weather_forecast(
     range_value: str,
     units: str,
     weather_client: WeatherClient,
+    cache_connection: sqlite3.Connection,
     city_field_name: str,
 ) -> Tuple[str, str, dict[str, Any], bool]:
     validated_city = _validate_required_query(city, field_name=city_field_name)
     validated_range = _validate_range(range_value)
 
-    cached_payload = _read_cached_forecast(city=validated_city, range_value=validated_range, units=units)
+    cached_payload = _read_weather_cache(
+        cache_connection,
+        city=validated_city,
+        range_value=validated_range,
+        units=units,
+    )
     if cached_payload is not None:
         return validated_city, validated_range, cached_payload, True
 
@@ -296,6 +400,14 @@ async def _fetch_weather_forecast(
         )
     except WeatherServiceError as exc:
         raise _map_weather_error(exc) from exc
+
+    _write_weather_cache(
+        cache_connection,
+        city=validated_city,
+        range_value=validated_range,
+        units=units,
+        payload=data,
+    )
 
     return validated_city, validated_range, data, False
 
@@ -350,12 +462,14 @@ async def weather(
     ),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
+    cache_connection: sqlite3.Connection = Depends(get_cache_connection),
 ) -> dict[str, Any]:
     validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=city,
         range_value=range,
         units=units,
         weather_client=weather_client,
+        cache_connection=cache_connection,
         city_field_name="city",
     )
 
@@ -380,6 +494,7 @@ async def weather_day(
     ),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
+    cache_connection: sqlite3.Connection = Depends(get_cache_connection),
 ) -> dict[str, Any]:
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "Wed, 31 Dec 2026 23:59:59 GMT"
@@ -390,6 +505,7 @@ async def weather_day(
         range_value="day",
         units=units,
         weather_client=weather_client,
+        cache_connection=cache_connection,
         city_field_name="location",
     )
 
@@ -404,12 +520,14 @@ async def weather_three_day(
     location: str = Query(..., min_length=1),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
+    cache_connection: sqlite3.Connection = Depends(get_cache_connection),
 ) -> dict[str, object]:
     validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=location,
         range_value="3day",
         units=units,
         weather_client=weather_client,
+        cache_connection=cache_connection,
         city_field_name="location",
     )
     response_payload = {"data": forecast_payload, "source": "weatherapi"}
@@ -423,12 +541,14 @@ async def weather_week(
     location: str = Query(..., min_length=1),
     units: str = Query("metric", pattern="^(metric|imperial)$"),
     weather_client: WeatherClient = Depends(get_weather_client),
+    cache_connection: sqlite3.Connection = Depends(get_cache_connection),
 ) -> dict[str, object]:
     validated_city, validated_range, forecast_payload, served_from_cache = await _fetch_weather_forecast(
         city=location,
         range_value="week",
         units=units,
         weather_client=weather_client,
+        cache_connection=cache_connection,
         city_field_name="location",
     )
     response_payload = {"data": forecast_payload, "source": "weatherapi"}
