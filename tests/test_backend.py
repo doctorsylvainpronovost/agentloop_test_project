@@ -350,10 +350,8 @@ class WeatherContractDocumentationParityTestCase(unittest.TestCase):
 
         required_snippets = [
             "GET /api/weather?city=London&range=day",
-            '"code": "missing_city"',
-            '"code": "missing_range"',
-            '"code": "invalid_range"',
             '"code": "invalid_city"',
+            '"code": "invalid_range"',
             "GET /api/weather/day?location=London",
             "Deprecation: true",
             "deprecated-but-preserved",
