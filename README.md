@@ -75,8 +75,8 @@ GET /api/weather?range=day
 ```json
 {
   "detail": {
-    "code": "missing_city",
-    "message": "city query parameter is required"
+    "code": "invalid_city",
+    "message": "city query parameter is required and must not be empty"
   }
 }
 ```
@@ -90,8 +90,8 @@ GET /api/weather?city=London
 ```json
 {
   "detail": {
-    "code": "missing_range",
-    "message": "range query parameter is required"
+    "code": "invalid_range",
+    "message": "range must be one of: day, 3day, week"
   }
 }
 ```
@@ -106,7 +106,7 @@ GET /api/weather?city=London&range=week
 {
   "detail": {
     "code": "invalid_range",
-    "message": "range must be 'day'"
+    "message": "range must be one of: day, 3day, week"
   }
 }
 ```
@@ -121,7 +121,7 @@ GET /api/weather?city=%20%20%20&range=day
 {
   "detail": {
     "code": "invalid_city",
-    "message": "city must not be empty"
+    "message": "city query parameter is required and must not be empty"
   }
 }
 ```
