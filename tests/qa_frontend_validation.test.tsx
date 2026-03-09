@@ -269,7 +269,7 @@ test("QA: Auto-detect location button works without errors", async () => {
 
     // Verify fetch was called with coordinates
     assert.equal(mockCalls.length, 1, "Fetch should be called once");
-    assert.match(mockCalls[0], /city=48.857%2C%202.352/, "Should call endpoint with coordinates");
+    assert.match(mockCalls[0], /city=48.857%2C\+2.352/, "Should call endpoint with coordinates");
 
     console.log("✓ Auto-detect location works without runtime errors");
   } finally {
